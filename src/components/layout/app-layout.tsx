@@ -24,8 +24,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarInset>
           <div className="flex flex-col h-screen">
             <AppHeader />
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-background overflow-y-auto">
-              {children}
+            <main className="flex-1 bg-background overflow-y-auto">
+              <div className="p-4 sm:p-6 lg:p-8 mx-auto max-w-[1440px]">
+                {children}
+              </div>
             </main>
           </div>
         </SidebarInset>
