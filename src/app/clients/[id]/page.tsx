@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { isPast, isWithinInterval, addMonths, formatDistanceToNow } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import { VehicleLogo } from "@/components/vehicles/vehicle-logo";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 // Helper to safely convert Firestore timestamp or string to a Date object
