@@ -1,82 +1,101 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset allows public read access to the 'clients' collection and its subcollections, but restricts write access to only authenticated users, effectively creating an anonymous read with authenticated write access pattern.
+ * @description This ruleset enforces a strict user-ownership model for client data.
  *
  * Data Structure:
- * - /clients/{clientId}: Stores client information. Publicly readable.
- * - /clients/{clientId}/vehicles/{vehicleId}: Stores vehicle information for a specific client. Publicly readable.
- * - /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Stores service history for a specific vehicle. Publicly readable.
+ * - /clients/{clientId}: Stores individual client profiles.
+ * - /clients/{clientId}/vehicles/{vehicleId}: Stores vehicles associated with a client.
+ * - /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Stores service records for each vehicle.
  *
  * Key Security Decisions:
- * - Public read access to all data, including client, vehicle, and service history.
- * - Authenticated-only write access for all data, preventing unauthorized modifications.
- * - Write operations on 'clients' and subcollections are denied for unauthenticated users.
- * - No validation is performed on data shapes beyond requiring authentication for writes.
+ * - Clients can only create, read, update, and delete their own client documents and associated data.
+ * - No listing of all clients is allowed to prevent unauthorized access to personal information.
+ * - All writes require authentication.
+ *
+ * Denormalization for Authorization:
+ *  None needed. The path-based ownership model is sufficient.
+ *
+ * Structural Segregation:
+ *  Not applicable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access to client information, but restricts write access to authenticated users only.
+     * @description Controls access to client profiles. Only the client can create, read, update, and delete their own profile.
      * @path /clients/{clientId}
-     * @allow (get, list) if true - Allows any user to read client data.
-     * @allow (create) if isSignedIn() - Allows only authenticated users to create client data.
-     * @deny (create) if !isSignedIn() - Denies unauthenticated users from creating client data.
-     * @allow (update) if isSignedIn() - Allows only authenticated users to update client data.
-     * @deny (update) if !isSignedIn() - Denies unauthenticated users from updating client data.
-     * @allow (delete) if isSignedIn() - Allows only authenticated users to delete client data.
-     * @deny (delete) if !isSignedIn() - Denies unauthenticated users from deleting client data.
-     * @principle Public read, authenticated write access for clients.
+     * @allow (create) User with UID 'user_abc' can create a client document with ID 'user_abc'.
+     * @deny (create) User with UID 'user_xyz' cannot create a client document with ID 'user_abc'.
+     * @allow (get) User with UID 'user_abc' can read client document with ID 'user_abc'.
+     * @deny (get) User with UID 'user_xyz' cannot read client document with ID 'user_abc'.
+     * @allow (update) User with UID 'user_abc' can update client document with ID 'user_abc'.
+     * @deny (update) User with UID 'user_xyz' cannot update client document with ID 'user_abc'.
+     * @allow (delete) User with UID 'user_abc' can delete client document with ID 'user_abc'.
+     * @deny (delete) User with UID 'user_xyz' cannot delete client document with ID 'user_abc'.
+     * @principle Enforces document ownership for writes.  Restricts access to a user's own data tree.
      */
     match /clients/{clientId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow get: if isOwner(clientId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(clientId);
+      allow update: if isSignedIn() && isExistingOwner(clientId);
+      allow delete: if isSignedIn() && isExistingOwner(clientId);
+
+        /**
+         * @description Controls access to vehicle documents for a specific client. Only the client can create, read, update, and delete their own vehicle documents.
+         * @path /clients/{clientId}/vehicles/{vehicleId}
+         * @allow (create) User with UID 'user_abc' can create a vehicle document under client 'user_abc'.
+         * @deny (create) User with UID 'user_xyz' cannot create a vehicle document under client 'user_abc'.
+         * @allow (get) User with UID 'user_abc' can read a vehicle document under client 'user_abc'.
+         * @deny (get) User with UID 'user_xyz' cannot read a vehicle document under client 'user_abc'.
+         * @allow (update) User with UID 'user_abc' can update a vehicle document under client 'user_abc'.
+         * @deny (update) User with UID 'user_xyz' cannot update a vehicle document under client 'user_abc'.
+         * @allow (delete) User with UID 'user_abc' can delete a vehicle document under client 'user_abc'.
+         * @deny (delete) User with UID 'user_xyz' cannot delete a vehicle document under client 'user_abc'.
+         * @principle Enforces document ownership for writes. Restricts access to a user's own data tree.
+         */
+        match /vehicles/{vehicleId} {
+          allow get: if isOwner(clientId);
+          allow list: if isOwner(clientId);
+          allow create: if isSignedIn() && isOwner(clientId);
+          allow update: if isSignedIn() && isExistingOwner(clientId);
+          allow delete: if isSignedIn() && isExistingOwner(clientId);
+
+            /**
+             * @description Controls access to service history documents for a specific vehicle. Only the client can create, read, update, and delete their own service history documents.
+             * @path /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
+             * @allow (create) User with UID 'user_abc' can create a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @deny (create) User with UID 'user_xyz' cannot create a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @allow (get) User with UID 'user_abc' can read a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @deny (get) User with UID 'user_xyz' cannot read a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @allow (update) User with UID 'user_abc' can update a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @deny (update) User with UID 'user_xyz' cannot update a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @allow (delete) User with UID 'user_abc' can delete a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @deny (delete) User with UID 'user_xyz' cannot delete a service history document under client 'user_abc' and vehicle 'vehicle_123'.
+             * @principle Enforces document ownership for writes. Restricts access to a user's own data tree.
+             */
+            match /serviceHistory/{serviceId} {
+              allow get: if isOwner(clientId);
+              allow list: if isOwner(clientId);
+              allow create: if isSignedIn() && isOwner(clientId);
+              allow update: if isSignedIn() && isExistingOwner(clientId);
+              allow delete: if isSignedIn() && isExistingOwner(clientId);
+            }
+        }
     }
 
-    /**
-     * @description Allows public read access to vehicle information for a specific client, but restricts write access to authenticated users only.
-     * @path /clients/{clientId}/vehicles/{vehicleId}
-     * @allow (get, list) if true - Allows any user to read vehicle data.
-     * @allow (create) if isSignedIn() - Allows only authenticated users to create vehicle data.
-     * @deny (create) if !isSignedIn() - Denies unauthenticated users from creating vehicle data.
-     * @allow (update) if isSignedIn() - Allows only authenticated users to update vehicle data.
-     * @deny (update) if !isSignedIn() - Denies unauthenticated users from updating vehicle data.
-     * @allow (delete) if isSignedIn() - Allows only authenticated users to delete vehicle data.
-     * @deny (delete) if !isSignedIn() - Denies unauthenticated users from deleting client data.
-     * @principle Public read, authenticated write access for vehicles.
-     */
-    match /clients/{clientId}/vehicles/{vehicleId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    /**
-     * @description Allows public read access to service history for a specific vehicle, but restricts write access to authenticated users only.
-     * @path /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
-     * @allow (get, list) if true - Allows any user to read service history data.
-     * @allow (create) if isSignedIn() - Allows only authenticated users to create service history data.
-     * @deny (create) if !isSignedIn() - Denies unauthenticated users from creating service history data.
-     * @allow (update) if isSignedIn() - Allows only authenticated users to update service history data.
-     * @deny (update) if !isSignedIn() - Denies unauthenticated users from updating service history data.
-     * @allow (delete) if isSignedIn() - Allows only authenticated users to delete service history data.
-     * @deny (delete) if !isSignedIn() - Denies unauthenticated users from deleting client data.
-     * @principle Public read, authenticated write access for service history.
-     */
-    match /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
-  }
 
-  // Helper function to determine if a user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
   }
 }
