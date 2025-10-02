@@ -1,112 +1,125 @@
 /**
- * @fileOverview Firestore Security Rules for Auto Detailing Shop.
+ * @fileoverview Firestore Security Rules for Auto Detail Shop App
  *
  * Core Philosophy:
- * This ruleset enforces a user-ownership model. Each client document and its associated
- * vehicles and service records are owned by the authenticated user who created them.
+ * This ruleset enforces a strict user-ownership model. Each user can only
+ * access their own profile and the data (clients, vehicles, service records)
+ * associated with their profile.
  *
  * Data Structure:
- * Data is structured hierarchically under the following paths:
- * /clients/{clientId}
- * /clients/{clientId}/vehicles/{vehicleId}
- * /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
+ * - /users/{userId}: Stores user profile information.
+ * - /users/{userId}/clients/{clientId}: Stores client information for a specific user.
+ * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}: Stores vehicles for a specific client.
+ * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Stores the service history for a specific vehicle.
  *
  * Key Security Decisions:
- * - Users can only create, read, update, and delete their own client documents and associated data.
- * - Data validation is relaxed during this prototyping phase, focusing on ownership and relationships.
+ * - Users can only list clients under their own user ID.
+ * - All data is nested under /users/{userId}, enforcing clear ownership.
+ * - The ruleset does not attempt to validate the specific data types of all fields, focusing
+ *   instead on authorization and relationship integrity.
  *
  * Denormalization for Authorization:
- * - The client ID is used in the path for vehicles and service records to establish ownership, avoiding the need for `get()` calls to verify client ownership.
+ *  - The data model inherently uses denormalization. The client, vehicle, and service records
+ *    are nested under the user's ID, making the ownership check straightforward.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to client documents.
-     * @path /clients/{clientId}
-     * @allow (create) - Authenticated user creates a client document where the clientId matches their UID.
-     * @allow (get, list, update, delete) - Authenticated user reads, updates, or deletes a client document where the clientId matches their UID.
-     * @deny (create) - Unauthenticated user attempts to create a client document.
-     * @deny (update) - Authenticated user attempts to update a client document where the clientId does not match their UID.
-     * @principle Enforces document ownership for all operations.
+     * @description Enforces access control for user profiles.
+     * @path /users/{userId}
+     * @allow (create) - User can create their own profile if the userId matches their auth UID.
+     * @allow (get, update, delete) - User can only access their own profile.
+     * @deny (create) - User cannot create a profile with a userId that doesn't match their auth UID.
+     * @deny (get, update, delete) - User cannot access another user's profile.
+     * @principle Enforces document ownership for writes.
      */
-    match /clients/{clientId} {
-      function isSignedIn() {
-        return request.auth != null;
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
       }
 
-      function isOwner(clientId) {
-        return request.auth.uid == clientId;
-      }
-
-      function isExistingOwner(clientId) {
-          return isOwner(clientId) && resource != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && isOwner(clientId);
-      allow update: if isExistingOwner(clientId);
-      allow delete: if isExistingOwner(clientId);
+      allow get: if isExistingOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.email is string && request.resource.data.name is string;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to vehicle documents for a specific client.
-     * @path /clients/{clientId}/vehicles/{vehicleId}
-     * @allow (create) - Authenticated user creates a vehicle document under their client document.
-     * @allow (get, list, update, delete) - Authenticated user reads, updates, or deletes a vehicle document under their client document.
-     * @deny (create) - Unauthenticated user attempts to create a vehicle document.
-     * @deny (update) - Authenticated user attempts to update a vehicle document under a client document they don't own.
-     * @principle Enforces document ownership and prevents unauthorized modifications.
+     * @description Enforces access control for clients under a user's profile.
+     * @path /users/{userId}/clients/{clientId}
+     * @allow (create) - User can create a client under their own profile.
+     * @allow (get, list, update, delete) - User can only access clients under their own profile.
+     * @deny (create) - User cannot create a client under another user's profile.
+     * @deny (get, list, update, delete) - User cannot access clients under another user's profile.
+     * @principle Restricts access to a user's own data tree.
      */
-    match /clients/{clientId}/vehicles/{vehicleId} {
-      function isSignedIn() {
-        return request.auth != null;
+    match /users/{userId}/clients/{clientId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
       }
 
-      function isOwner(clientId) {
-        return request.auth.uid == clientId;
-      }
-
-      function isExistingOwner(clientId) {
-        return isOwner(clientId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(clientId);
-      allow list: if isSignedIn() && isOwner(clientId);
-      allow create: if isSignedIn() && isOwner(clientId);
-      allow update: if isExistingOwner(clientId);
-      allow delete: if isExistingOwner(clientId);
+      allow get: if isExistingOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.name is string && request.resource.data.email is string && request.resource.data.createdAt is string;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to service history documents for a specific vehicle.
-     * @path /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
-     * @allow (create) - Authenticated user creates a service record document under their client and vehicle documents.
-     * @allow (get, list, update, delete) - Authenticated user reads, updates, or deletes a service record document under their client and vehicle documents.
-     * @deny (create) - Unauthenticated user attempts to create a service record document.
-     * @deny (update) - Authenticated user attempts to update a service record document under client or vehicle document they don't own.
-     * @principle Enforces document ownership and prevents unauthorized modifications.
+     * @description Enforces access control for vehicles under a client's profile.
+     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}
+     * @allow (create) - User can create a vehicle under their own client profile.
+     * @allow (get, list, update, delete) - User can only access vehicles under their own client profile.
+     * @deny (create) - User cannot create a vehicle under another user's client profile.
+     * @deny (get, list, update, delete) - User cannot access vehicles under another user's client profile.
+     * @principle Restricts access to a user's own data tree.
      */
-    match /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
-      function isSignedIn() {
-        return request.auth != null;
+    match /users/{userId}/clients/{clientId}/vehicles/{vehicleId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+       function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
       }
 
-      function isOwner(clientId) {
-        return request.auth.uid == clientId;
+      allow get: if isExistingOwner(userId);
+      allow list: if isExistingOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.make is string && request.resource.data.model is string && request.resource.data.year is number;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces access control for service history under a vehicle's profile.
+     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
+     * @allow (create) - User can create a service record under their own vehicle profile.
+     * @allow (get, list, update, delete) - User can only access service records under their own vehicle profile.
+     * @deny (create) - User cannot create a service record under another user's vehicle profile.
+     * @deny (get, list, update, delete) - User cannot access service records under another user's vehicle profile.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
       }
 
-      function isExistingOwner(clientId) {
-        return isOwner(clientId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(clientId);
-      allow list: if isSignedIn() && isOwner(clientId);
-      allow create: if isSignedIn() && isOwner(clientId);
-      allow update: if isExistingOwner(clientId);
-      allow delete: if isExistingOwner(clientId);
+      allow get: if isExistingOwner(userId);
+      allow list: if isExistingOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.serviceType is string && request.resource.data.date is string && request.resource.data.cost is number;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
   }
 }
