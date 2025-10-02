@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/app-layout';
 import { getClients } from '@/lib/data';
-import { Client, ServiceRecord, Vehicle } from '@/lib/types';
+import { Client } from '@/lib/types';
 import { subMonths, isAfter, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -116,8 +116,8 @@ export default function DashboardPage() {
       });
     });
 
-    const clientGrowthData = Object.entries(clientGrowth).map(([month, count]) => ({ month: new Date(month + '-02').toLocaleString('default', { month: 'long' }), clients: count }));
-    const monthlyRevenueData = Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month: new Date(month + '-02').toLocaleString('default', { month: 'long' }), revenue }));
+    const clientGrowthData = Object.entries(clientGrowth).map(([month, count]) => ({ month: new Date(`${month}-02T00:00:00`).toLocaleString('default', { month: 'long' }), clients: count }));
+    const monthlyRevenueData = Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month: new Date(`${month}-02T00:00:00`).toLocaleString('default', { month: 'long' }), revenue }));
     
     expirations.sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
 

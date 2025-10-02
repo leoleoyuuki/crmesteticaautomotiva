@@ -15,9 +15,13 @@ const toISOString = (date: any): string => {
         return new Date(date.seconds * 1000).toISOString();
     }
     if (typeof date === 'string') {
-        return date;
+        const d = new Date(date);
+        if (!isNaN(d.getTime())) {
+            return d.toISOString();
+        }
     }
-    return new Date().toISOString(); // Fallback
+    // Return a valid ISO string for invalid or missing dates to avoid downstream errors
+    return new Date(0).toISOString();
 };
 
 
@@ -29,23 +33,60 @@ export async function getClients(userId: string): Promise<Client[]> {
     const clientsCollection = collection(firestore, 'users', userId, 'clients');
     try {
         const clientSnapshot = await getDocs(clientsCollection);
-        const clientsList = clientSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return { 
-                id: doc.id, 
-                ...data,
-                createdAt: toISOString(data.createdAt)
-            } as Client;
-        });
         
-        const clientsWithVehicles = await Promise.all(clientsList.map(async (client) => {
+        const clientsList = await Promise.all(clientSnapshot.docs.map(async (clientDoc) => {
+            const clientData = clientDoc.data();
+            const client: Client = { 
+                id: clientDoc.id, 
+                name: clientData.name,
+                email: clientData.email,
+                phone: clientData.phone,
+                avatarUrl: clientData.avatarUrl,
+                avatarHint: clientData.avatarHint,
+                createdAt: toISOString(clientData.createdAt),
+                vehicles: []
+            };
+
             const vehiclesCollection = collection(firestore, 'users', userId, 'clients', client.id, 'vehicles');
             const vehiclesSnapshot = await getDocs(vehiclesCollection);
-            const vehicles = vehiclesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Omit<Vehicle, 'serviceHistory'>));
-            return { ...client, vehicles: vehicles || [] };
+            
+            client.vehicles = await Promise.all(vehiclesSnapshot.docs.map(async (vehicleDoc) => {
+                const vehicleData = vehicleDoc.data();
+                const vehicle: Vehicle = {
+                    id: vehicleDoc.id,
+                    make: vehicleData.make,
+                    model: vehicleData.model,
+                    year: vehicleData.year,
+                    licensePlate: vehicleData.licensePlate,
+                    imageUrl: vehicleData.imageUrl,
+                    imageHint: vehicleData.imageHint,
+                    serviceHistory: []
+                };
+
+                const serviceHistoryCollection = collection(firestore, 'users', userId, 'clients', client.id, 'vehicles', vehicle.id, 'serviceHistory');
+                const serviceHistorySnapshot = await getDocs(serviceHistoryCollection);
+
+                vehicle.serviceHistory = serviceHistorySnapshot.docs.map(serviceDoc => {
+                    const serviceData = serviceDoc.data();
+                    return {
+                        id: serviceDoc.id,
+                        serviceType: serviceData.serviceType,
+                        notes: serviceData.notes,
+                        cost: serviceData.cost,
+                        durationMonths: serviceData.durationMonths,
+                        date: toISOString(serviceData.date),
+                        expirationDate: toISOString(serviceData.expirationDate)
+                    } as ServiceRecord;
+                });
+                
+                return vehicle;
+            }));
+
+            return client;
         }));
 
-        return clientsWithVehicles;
+        return clientsList;
+
     } catch (serverError: any) {
         if (serverError.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
@@ -83,7 +124,15 @@ export async function getClientById(userId: string, id: string): Promise<Client 
                 
                 const serviceHistoryCollection = collection(vehicleDoc.ref, 'serviceHistory');
                 const serviceHistorySnapshot = await getDocs(serviceHistoryCollection);
-                vehicleData.serviceHistory = serviceHistorySnapshot.docs.map(serviceDoc => ({ id: serviceDoc.id, ...serviceDoc.data() } as ServiceRecord));
+                vehicleData.serviceHistory = serviceHistorySnapshot.docs.map(serviceDoc => {
+                    const serviceData = serviceDoc.data();
+                     return {
+                        id: serviceDoc.id,
+                        ...serviceData,
+                        date: toISOString(serviceData.date),
+                        expirationDate: toISOString(serviceData.expirationDate),
+                     } as ServiceRecord
+                });
                 
                 return vehicleData;
             }));
@@ -133,7 +182,13 @@ export async function getServiceRecordById(userId: string, clientId: string, veh
     try {
         const serviceDoc = await getDoc(serviceDocRef);
         if (serviceDoc.exists()) {
-            return { id: serviceDoc.id, ...serviceDoc.data() } as ServiceRecord;
+             const serviceData = serviceDoc.data();
+            return { 
+                id: serviceDoc.id,
+                ...serviceData,
+                date: toISOString(serviceData.date),
+                expirationDate: toISOString(serviceData.expirationDate)
+            } as ServiceRecord;
         }
         return undefined;
     } catch (serverError) {
