@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 231 60% 91%;
+    --background: 231 60% 98%;
     --foreground: 231 30% 25%;
     --card: 0 0% 100%;
     --card-foreground: 231 30% 25%;
@@ -12,16 +12,16 @@
     --popover-foreground: 231 30% 25%;
     --primary: 231 48% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 231 60% 85%;
+    --secondary: 231 60% 91%;
     --secondary-foreground: 231 30% 25%;
-    --muted: 231 60% 85%;
+    --muted: 231 60% 91%;
     --muted-foreground: 231 30% 55%;
     --accent: 340 82% 52%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 231 48% 82%;
-    --input: 231 48% 82%;
+    --border: 231 48% 90%;
+    --input: 231 48% 90%;
     --ring: 231 48% 48%;
     --chart-1: 231 48% 48%;
     --chart-2: 340 82% 52%;
@@ -29,10 +29,18 @@
     --chart-4: 14 74% 66%;
     --chart-5: 280 65% 60%;
     --radius: 0.5rem;
+    --sidebar-background: 231 22% 24%;
+    --sidebar-foreground: 231 60% 91%;
+    --sidebar-primary: 231 48% 58%;
+    --sidebar-primary-foreground: 231 22% 15%;
+    --sidebar-accent: 231 22% 35%;
+    --sidebar-accent-foreground: 231 60% 91%;
+    --sidebar-border: 231 22% 30%;
+    --sidebar-ring: 231 48% 58%;
   }
  
   .dark {
-    --background: 231 22% 20%;
+    --background: 231 22% 18%;
     --foreground: 231 60% 91%;
     --card: 231 22% 24%;
     --card-foreground: 231 60% 91%;
@@ -56,6 +64,14 @@
     --chart-3: 210 40% 66%;
     --chart-4: 14 74% 76%;
     --chart-5: 280 65% 70%;
+    --sidebar-background: 231 22% 18%;
+    --sidebar-foreground: 231 60% 91%;
+    --sidebar-primary: 231 48% 58%;
+    --sidebar-primary-foreground: 231 22% 15%;
+    --sidebar-accent: 231 22% 30%;
+    --sidebar-accent-foreground: 231 60% 91%;
+    --sidebar-border: 231 22% 30%;
+    --sidebar-ring: 231 48% 58%;
   }
 }
 
@@ -65,5 +81,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  .bg-background {
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(at 15% 95%, hsl(var(--secondary)) 0px, transparent 50%);
+  }
+
+  .dark .bg-background {
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(at 15% 95%, hsl(var(--secondary), 0.3) 0px, transparent_50%);
   }
 }

@@ -13,10 +13,12 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { getClients } from '@/lib/data';
 import { Client, ServiceRecord, Vehicle } from '@/lib/types';
 import { subMonths, isAfter, parseISO } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type UpcomingExpiration = {
   clientId: string;
   clientName: string;
+  clientAvatar: string;
   vehicleId: string;
   vehicleMake: string;
   vehicleModel: string;
@@ -101,6 +103,7 @@ export default function DashboardPage() {
             expirations.push({
               clientId: client.id,
               clientName: client.name,
+              clientAvatar: client.avatarUrl,
               vehicleId: vehicle.id,
               vehicleMake: vehicle.make,
               vehicleModel: vehicle.model,
@@ -133,9 +136,20 @@ export default function DashboardPage() {
 
   if (userLoading || loading || !user) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p>Carregando...</p>
-      </div>
+      <AppLayout>
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-[126px]" />
+            <Skeleton className="h-[126px]" />
+            <Skeleton className="h-[126px]" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Skeleton className="col-span-4 h-[330px]" />
+            <Skeleton className="col-span-4 lg:col-span-3 h-[330px]" />
+          </div>
+          <Skeleton className="h-[400px]" />
+        </div>
+      </AppLayout>
     );
   }
 
