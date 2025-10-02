@@ -1,7 +1,7 @@
 'use client';
 
 import { getClientById } from "@/lib/data";
-import { notFound, useRouter } from "next/navigation";
+import { notFound, useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,9 +26,11 @@ import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button"
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 
 
-export default function ClientDetailPage({ params }: { params: { id: string } }) {
+export default function ClientDetailPage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const params = useParams();
+  const clientId = params.id as string;
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
 
     async function fetchClient() {
       if (!user) return;
-      const clientData = await getClientById(user.uid, params.id);
+      const clientData = await getClientById(user.uid, clientId);
       if (!clientData) {
         notFound();
       } else {
@@ -52,7 +54,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     if(user) {
       fetchClient();
     }
-  }, [user, userLoading, params.id, router]);
+  }, [user, userLoading, clientId, router]);
 
   if (userLoading || loading || !client || !user) {
     return <div className="flex h-screen items-center justify-center">Carregando...</div>;
@@ -182,3 +184,5 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     </AppLayout>
   );
 }
+
+    
