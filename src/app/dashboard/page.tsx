@@ -15,10 +15,11 @@ import { Client } from '@/lib/types';
 import { subMonths, isAfter, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type UpcomingExpiration = {
+export type UpcomingExpiration = {
   clientId: string;
   clientName: string;
   clientAvatar: string;
+  clientPhone: string;
   vehicleId: string;
   vehicleMake: string;
   vehicleModel: string;
@@ -77,11 +78,14 @@ export default function DashboardPage() {
     }
 
     clients.forEach(client => {
-      const clientCreatedAt = parseISO(client.createdAt);
-      if (isAfter(clientCreatedAt, sixMonthsAgo)) {
-        const monthKey = `${clientCreatedAt.getFullYear()}-${(clientCreatedAt.getMonth() + 1).toString().padStart(2, '0')}`;
-        if (clientGrowth[monthKey] !== undefined) {
-          clientGrowth[monthKey]++;
+      // Ensure createdAt is a valid date string before parsing
+      if(client.createdAt && typeof client.createdAt === 'string') {
+        const clientCreatedAt = parseISO(client.createdAt);
+        if (isAfter(clientCreatedAt, sixMonthsAgo)) {
+          const monthKey = `${clientCreatedAt.getFullYear()}-${(clientCreatedAt.getMonth() + 1).toString().padStart(2, '0')}`;
+          if (clientGrowth[monthKey] !== undefined) {
+            clientGrowth[monthKey]++;
+          }
         }
       }
 
@@ -90,27 +94,32 @@ export default function DashboardPage() {
           totalServices++;
           totalRevenue += service.cost;
           
-          const serviceDate = parseISO(service.date);
-           if (isAfter(serviceDate, sixMonthsAgo)) {
-             const monthKey = `${serviceDate.getFullYear()}-${(serviceDate.getMonth() + 1).toString().padStart(2, '0')}`;
-             if (monthlyRevenue[monthKey] !== undefined) {
-                monthlyRevenue[monthKey] += service.cost;
-             }
-           }
+          if(service.date && typeof service.date === 'string') {
+            const serviceDate = parseISO(service.date);
+            if (isAfter(serviceDate, sixMonthsAgo)) {
+              const monthKey = `${serviceDate.getFullYear()}-${(serviceDate.getMonth() + 1).toString().padStart(2, '0')}`;
+              if (monthlyRevenue[monthKey] !== undefined) {
+                  monthlyRevenue[monthKey] += service.cost;
+              }
+            }
+          }
 
-          const expirationDate = parseISO(service.expirationDate);
-          if(isAfter(expirationDate, now)) {
-            expirations.push({
-              clientId: client.id,
-              clientName: client.name,
-              clientAvatar: client.avatarUrl,
-              vehicleId: vehicle.id,
-              vehicleMake: vehicle.make,
-              vehicleModel: vehicle.model,
-              serviceId: service.id,
-              serviceType: service.serviceType,
-              expirationDate: service.expirationDate,
-            });
+          if(service.expirationDate && typeof service.expirationDate === 'string') {
+            const expirationDate = parseISO(service.expirationDate);
+            if(isAfter(expirationDate, now)) {
+              expirations.push({
+                clientId: client.id,
+                clientName: client.name,
+                clientAvatar: client.avatarUrl,
+                clientPhone: client.phone,
+                vehicleId: vehicle.id,
+                vehicleMake: vehicle.make,
+                vehicleModel: vehicle.model,
+                serviceId: service.id,
+                serviceType: service.serviceType,
+                expirationDate: service.expirationDate,
+              });
+            }
           }
         });
       });
