@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Calendar, Car, MoreVertical } from "lucide-react";
+import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ServiceRecommendations } from "@/components/clients/recommendations";
@@ -22,6 +22,8 @@ import { useUser } from "@/firebase/auth/use-user";
 import { useEffect, useState } from "react";
 import { Client } from "@/lib/types";
 import { AppLayout } from "@/components/layout/app-layout";
+import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button";
+import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
@@ -52,7 +54,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     }
   }, [user, userLoading, params.id, router]);
 
-  if (userLoading || loading || !client) {
+  if (userLoading || loading || !client || !user) {
     return <div className="flex h-screen items-center justify-center">Carregando...</div>;
   }
 
@@ -67,22 +69,34 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
               </Avatar>
               <div className="flex-1">
                 <CardTitle className="font-headline text-3xl">{client.name}</CardTitle>
-                <CardDescription className="flex items-center gap-4 text-base">
+                <CardDescription className="flex items-center flex-wrap gap-x-4 gap-y-1 text-base">
                   <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>
                   <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {client.phone}</span>
                   <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Cliente desde {new Date(client.createdAt).toLocaleDateString('pt-BR')}</span>
                 </CardDescription>
               </div>
-              <Button asChild variant="outline"><Link href="/clients">Voltar</Link></Button>
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline"><Link href={`/clients/${client.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar Cliente</Link></Button>
+                <Button asChild variant="outline"><Link href="/clients">Voltar</Link></Button>
+              </div>
           </CardHeader>
         </Card>
 
         <ServiceRecommendations client={client} />
 
         <div>
-          <h2 className="text-2xl font-headline mb-4 flex items-center gap-2">
-              <Car /> Veículos
-          </h2>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-headline flex items-center gap-2">
+                    <Car /> Veículos
+                </h2>
+                <Button asChild>
+                    <Link href={`/clients/${client.id}/vehicles/new`}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar Veículo
+                    </Link>
+                </Button>
+            </div>
+          
           {client.vehicles && client.vehicles.length > 0 ? (
             <div className="space-y-6">
               {client.vehicles.map(vehicle => (
@@ -92,17 +106,24 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                               <CardTitle className="font-headline">{vehicle.make} {vehicle.model}</CardTitle>
                               <CardDescription>{vehicle.year} - {vehicle.licensePlate}</CardDescription>
                           </div>
-                          <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                      <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>Editar Veículo</DropdownMenuItem>
-                                  <DropdownMenuItem>Adicionar Serviço</DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" asChild>
+                                <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/new`}>
+                                    <PlusCircle className="mr-2 h-4 w-4"/> Adicionar Serviço
+                                </Link>
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem asChild><Link href={`/clients/${client.id}/vehicles/${vehicle.id}/edit`} className="cursor-pointer">Editar Veículo</Link></DropdownMenuItem>
+                                    <DeleteVehicleButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} onSelect={(e) => e.preventDefault()} />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                       </CardHeader>
                       <CardContent className="grid md:grid-cols-3 gap-6">
                           <div className="md:col-span-1">
@@ -117,7 +138,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                                           <TableHead>Serviço</TableHead>
                                           <TableHead>Data</TableHead>
                                           <TableHead className="text-right">Custo</TableHead>
-                                          <TableHead className="text-center">Ações de IA</TableHead>
+                                          <TableHead className="text-center">Ações</TableHead>
                                       </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -126,8 +147,14 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                                               <TableCell className="font-medium">{service.serviceType}</TableCell>
                                               <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
                                               <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
-                                              <TableCell className="text-center">
+                                              <TableCell className="text-center flex items-center justify-center gap-1">
                                                   <ExpirationPrediction client={client} vehicle={vehicle} service={service} />
+                                                  <Button variant="ghost" size="icon" asChild>
+                                                    <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Link>
+                                                  </Button>
+                                                  <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
                                               </TableCell>
                                           </TableRow>
                                       ))}
@@ -147,7 +174,6 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
               <Card className="flex items-center justify-center p-10">
                   <div className="text-center text-muted-foreground">
                       <p>Nenhum veículo cadastrado para este cliente.</p>
-                      <Button variant="link" className="mt-2">Adicionar Veículo</Button>
                   </div>
               </Card>
           )}

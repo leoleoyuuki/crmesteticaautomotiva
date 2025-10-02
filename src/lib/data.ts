@@ -80,3 +80,39 @@ export async function getClientById(userId: string, id: string): Promise<Client 
         return undefined;
     }
 }
+
+export async function getVehicleById(userId: string, clientId: string, vehicleId: string): Promise<Vehicle | undefined> {
+    if (!firestore) {
+        console.error("Firestore not initialized");
+        return undefined;
+    }
+    const vehicleDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId);
+    try {
+        const vehicleDoc = await getDoc(vehicleDocRef);
+        if (vehicleDoc.exists()) {
+            return { id: vehicleDoc.id, ...vehicleDoc.data() } as Vehicle;
+        }
+        return undefined;
+    } catch (serverError) {
+        console.error("Error fetching vehicle:", serverError);
+        return undefined;
+    }
+}
+
+export async function getServiceRecordById(userId: string, clientId: string, vehicleId: string, serviceId: string): Promise<ServiceRecord | undefined> {
+    if (!firestore) {
+        console.error("Firestore not initialized");
+        return undefined;
+    }
+    const serviceDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
+    try {
+        const serviceDoc = await getDoc(serviceDocRef);
+        if (serviceDoc.exists()) {
+            return { id: serviceDoc.id, ...serviceDoc.data() } as ServiceRecord;
+        }
+        return undefined;
+    } catch (serverError) {
+        console.error("Error fetching service record:", serverError);
+        return undefined;
+    }
+}

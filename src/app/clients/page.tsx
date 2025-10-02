@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/app-layout';
+import { DeleteClientButton } from '@/components/clients/delete-client-button';
 
 
 export default function ClientsPage() {
@@ -160,8 +161,10 @@ export default function ClientsPage() {
                         <Link href={`/clients/${client.id}`} passHref>
                           <DropdownMenuItem className="cursor-pointer">Ver Detalhes</DropdownMenuItem>
                         </Link>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+                        <Link href={`/clients/${client.id}/edit`} passHref>
+                          <DropdownMenuItem className="cursor-pointer">Editar</DropdownMenuItem>
+                        </Link>
+                        <DeleteClientButton userId={user.uid} clientId={client.id} />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

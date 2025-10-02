@@ -9,6 +9,8 @@ export interface Client {
   vehicles: Vehicle[];
 }
 
+export type ClientFormData = Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>;
+
 export interface Vehicle {
   id: string;
   make: string;
@@ -20,6 +22,9 @@ export interface Vehicle {
   serviceHistory: ServiceRecord[];
 }
 
+export type VehicleFormData = Omit<Vehicle, 'id' | 'imageUrl' | 'imageHint' | 'serviceHistory'>;
+
+
 export interface ServiceRecord {
   id: string;
   serviceType: string;
@@ -28,6 +33,9 @@ export interface ServiceRecord {
   cost: number;
   predictedExpirationDate?: string;
 }
+
+export type ServiceRecordFormData = Omit<ServiceRecord, 'id'>;
+
 
 export interface Notification {
   id: string;
