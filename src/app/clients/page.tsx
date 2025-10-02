@@ -34,10 +34,17 @@ export default function ClientsPage() {
       if (!user) return;
       try {
         const clientsData = await getClients(user.uid);
-        const formattedClients = clientsData.map(client => ({
-            ...client,
-            createdAt: client.createdAt ? new Date((client.createdAt as any).seconds * 1000).toISOString() : new Date().toISOString(),
-        }));
+        const formattedClients = clientsData.map(client => {
+            // Firestore timestamps can be objects with seconds and nanoseconds
+            const createdAtDate = client.createdAt && (client.createdAt as any).seconds 
+                ? new Date((client.createdAt as any).seconds * 1000)
+                : new Date(); // Fallback for any other case
+
+            return {
+                ...client,
+                createdAt: createdAtDate.toISOString(),
+            };
+        });
         setClients(formattedClients);
       } catch (error) {
         console.error("Failed to fetch clients:", error);
