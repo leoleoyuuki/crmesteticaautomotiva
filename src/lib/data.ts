@@ -1,10 +1,24 @@
 'use client';
 
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import type { Client, Vehicle, ServiceRecord, Notification } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+
+// Helper to safely convert Firestore timestamp (or string) to an ISO string
+const toISOString = (date: any): string => {
+    if (date instanceof Timestamp) {
+      return date.toDate().toISOString();
+    }
+    if (date && typeof date.seconds === 'number') {
+        return new Date(date.seconds * 1000).toISOString();
+    }
+    if (typeof date === 'string') {
+        return date;
+    }
+    return new Date().toISOString(); // Fallback
+};
 
 
 export async function getClients(userId: string): Promise<Client[]> {
@@ -15,7 +29,14 @@ export async function getClients(userId: string): Promise<Client[]> {
     const clientsCollection = collection(firestore, 'users', userId, 'clients');
     try {
         const clientSnapshot = await getDocs(clientsCollection);
-        const clientsList = clientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
+        const clientsList = clientSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                createdAt: toISOString(data.createdAt)
+            } as Client;
+        });
         
         const clientsWithVehicles = await Promise.all(clientsList.map(async (client) => {
             const vehiclesCollection = collection(firestore, 'users', userId, 'clients', client.id, 'vehicles');
@@ -49,7 +70,11 @@ export async function getClientById(userId: string, id: string): Promise<Client 
         const clientDoc = await getDoc(clientDocRef);
 
         if (clientDoc.exists()) {
-            const clientData = { id: clientDoc.id, ...clientDoc.data() } as Client;
+            const clientData = { 
+                id: clientDoc.id, 
+                ...clientDoc.data(),
+                createdAt: toISOString(clientDoc.data().createdAt)
+            } as Client;
             
             const vehiclesCollection = collection(clientDocRef, 'vehicles');
             const vehiclesSnapshot = await getDocs(vehiclesCollection);
