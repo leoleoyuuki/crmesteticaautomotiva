@@ -25,7 +25,8 @@ import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button"
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { isPast, isWithinInterval, addMonths } from "date-fns";
+import { isPast, isWithinInterval, addMonths, formatDistanceToNow } from "date-fns";
+import { ptBR } from 'date-fns/locale';
 
 
 // Helper to safely convert Firestore timestamp or string to a Date object
@@ -83,14 +84,20 @@ export default function ClientDetailPage() {
     const now = new Date();
     const expiry = new Date(expirationDate);
     const oneMonthFromNow = addMonths(now, 1);
+    
+    let variant: "destructive" | "default" | "secondary" = "secondary";
+    let text = `Vence ${formatDistanceToNow(expiry, { locale: ptBR, addSuffix: true })}`;
+    let className = "";
 
     if (isPast(expiry)) {
-        return <Badge variant="destructive">Vencido</Badge>;
+        variant = "destructive";
+        text = `Venceu ${formatDistanceToNow(expiry, { locale: ptBR, addSuffix: true })}`;
+    } else if (isWithinInterval(expiry, { start: now, end: oneMonthFromNow })) {
+        variant = "default";
+        className="bg-yellow-500 text-black hover:bg-yellow-600";
     }
-    if (isWithinInterval(expiry, { start: now, end: oneMonthFromNow })) {
-        return <Badge variant="default" className="bg-yellow-500 text-black">Vence em breve</Badge>;
-    }
-    return <Badge variant="secondary">Em dia</Badge>;
+
+    return <Badge variant={variant} className={cn("capitalize", className)}>{text}</Badge>;
   }
 
   return (
@@ -185,7 +192,6 @@ export default function ClientDetailPage() {
                                               <TableCell>
                                                 <div className="flex items-center gap-2">
                                                     {getExpirationBadge(service.expirationDate)}
-                                                    <span>{new Date(service.expirationDate).toLocaleDateString('pt-BR')}</span>
                                                 </div>
                                               </TableCell>
                                               <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>

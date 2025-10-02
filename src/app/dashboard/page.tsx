@@ -8,30 +8,130 @@ import { DollarSign, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/app-layout';
+import { getClients } from '@/lib/data';
+import { Client, ServiceRecord, Vehicle } from '@/lib/types';
+import { subMonths, isAfter, parseISO } from 'date-fns';
+
+type UpcomingExpiration = {
+  clientId: string;
+  clientName: string;
+  vehicleId: string;
+  vehicleMake: string;
+  vehicleModel: string;
+  serviceId: string;
+  serviceType: string;
+  expirationDate: string;
+};
 
 export default function DashboardPage() {
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!userLoading && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+    
+    async function fetchData() {
+        if (!user) return;
+        const clientData = await getClients(user.uid);
+        setClients(clientData);
+        setLoading(false);
+    }
+    
+    if (user) {
+        fetchData();
+    }
+  }, [user, userLoading, router]);
   
-  // TODO: Re-implement with data from Firestore
-  const stats = {
-    clientRetention: 0,
-    upsellConversion: 0,
-    averageTicketSize: 0,
-  };
-  const clientGrowthData = [];
-  const monthlyRevenueData = [];
-  const upcomingExpirations = [];
+  const { stats, clientGrowthData, monthlyRevenueData, upcomingExpirations } = useMemo(() => {
+    if (!clients.length) {
+      return {
+        stats: { totalRevenue: 0, totalClients: 0, totalServices: 0 },
+        clientGrowthData: [],
+        monthlyRevenueData: [],
+        upcomingExpirations: [],
+      };
+    }
 
-  if (loading || !user) {
+    const now = new Date();
+    const sixMonthsAgo = subMonths(now, 6);
+
+    let totalRevenue = 0;
+    let totalServices = 0;
+    const clientGrowth: { [key: string]: number } = {};
+    const monthlyRevenue: { [key: string]: number } = {};
+    const expirations: UpcomingExpiration[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+        const month = subMonths(now, i);
+        const monthKey = `${month.getFullYear()}-${(month.getMonth() + 1).toString().padStart(2, '0')}`;
+        clientGrowth[monthKey] = 0;
+        monthlyRevenue[monthKey] = 0;
+    }
+
+    clients.forEach(client => {
+      const clientCreatedAt = parseISO(client.createdAt);
+      if (isAfter(clientCreatedAt, sixMonthsAgo)) {
+        const monthKey = `${clientCreatedAt.getFullYear()}-${(clientCreatedAt.getMonth() + 1).toString().padStart(2, '0')}`;
+        if (clientGrowth[monthKey] !== undefined) {
+          clientGrowth[monthKey]++;
+        }
+      }
+
+      client.vehicles?.forEach(vehicle => {
+        vehicle.serviceHistory?.forEach(service => {
+          totalServices++;
+          totalRevenue += service.cost;
+          
+          const serviceDate = parseISO(service.date);
+           if (isAfter(serviceDate, sixMonthsAgo)) {
+             const monthKey = `${serviceDate.getFullYear()}-${(serviceDate.getMonth() + 1).toString().padStart(2, '0')}`;
+             if (monthlyRevenue[monthKey] !== undefined) {
+                monthlyRevenue[monthKey] += service.cost;
+             }
+           }
+
+          const expirationDate = parseISO(service.expirationDate);
+          if(isAfter(expirationDate, now)) {
+            expirations.push({
+              clientId: client.id,
+              clientName: client.name,
+              vehicleId: vehicle.id,
+              vehicleMake: vehicle.make,
+              vehicleModel: vehicle.model,
+              serviceId: service.id,
+              serviceType: service.serviceType,
+              expirationDate: service.expirationDate,
+            });
+          }
+        });
+      });
+    });
+
+    const clientGrowthData = Object.entries(clientGrowth).map(([month, count]) => ({ month: new Date(month + '-02').toLocaleString('default', { month: 'long' }), clients: count }));
+    const monthlyRevenueData = Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month: new Date(month + '-02').toLocaleString('default', { month: 'long' }), revenue }));
+    
+    expirations.sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
+
+    return {
+      stats: {
+        totalRevenue,
+        totalClients: clients.length,
+        totalServices,
+      },
+      clientGrowthData,
+      monthlyRevenueData,
+      upcomingExpirations: expirations,
+    };
+
+  }, [clients]);
+
+  if (userLoading || loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p>Carregando...</p>
@@ -43,9 +143,9 @@ export default function DashboardPage() {
     <AppLayout>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <StatCard title="Retenção de Clientes" value={`${stats.clientRetention}%`} icon={Users} description="nos últimos 30 dias" />
-          <StatCard title="Conversão de Upsell" value={`${stats.upsellConversion}%`} icon={TrendingUp} description="aumento de 5% vs. mês passado" />
-          <StatCard title="Ticket Médio" value={`R$${stats.averageTicketSize.toFixed(2).replace('.', ',')}`} icon={DollarSign} description="por serviço" />
+          <StatCard title="Receita Total" value={`R$${stats.totalRevenue.toFixed(2).replace('.', ',')}`} icon={DollarSign} description="Receita de todos os serviços" />
+          <StatCard title="Total de Clientes" value={stats.totalClients.toString()} icon={Users} description="Clientes cadastrados na base" />
+          <StatCard title="Total de Serviços" value={stats.totalServices.toString()} icon={TrendingUp} description="Serviços prestados" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4">
