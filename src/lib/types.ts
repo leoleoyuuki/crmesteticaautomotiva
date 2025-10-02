@@ -31,10 +31,11 @@ export interface ServiceRecord {
   date: string;
   notes: string;
   cost: number;
-  predictedExpirationDate?: string;
+  durationMonths: number;
+  expirationDate: string;
 }
 
-export type ServiceRecordFormData = Omit<ServiceRecord, 'id'>;
+export type ServiceRecordFormData = Omit<ServiceRecord, 'id' | 'expirationDate'>;
 
 
 export interface Notification {

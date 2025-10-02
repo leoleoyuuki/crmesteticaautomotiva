@@ -108,9 +108,18 @@
                 "cost": {
                     "type": "number",
                     "description": "The cost of the service."
+                },
+                "durationMonths": {
+                    "type": "number",
+                    "description": "The duration of the service in months."
+                },
+                "expirationDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The calculated expiration date of the service."
                 }
             },
-            "required": ["serviceType", "date", "cost"]
+            "required": ["serviceType", "date", "cost", "durationMonths", "expirationDate"]
         }
     },
     "auth": {

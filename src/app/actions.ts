@@ -1,6 +1,5 @@
 'use server';
 
-import { predictServiceExpiration, PredictServiceExpirationInput } from '@/ai/flows/predict-service-expiration';
 import { recommendServicePackages, RecommendServicePackagesInput } from '@/ai/flows/recommend-service-packages';
 import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
@@ -10,6 +9,7 @@ import { redirect } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { addMonths } from 'date-fns';
 
 // Client Actions
 export async function addClient(userId: string, formData: Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>) {
@@ -150,15 +150,19 @@ export async function deleteVehicle(userId: string, clientId: string, vehicleId:
 
 
 // Service Record Actions
-export async function addServiceRecord(userId: string, clientId: string, vehicleId: string, formData: Omit<ServiceRecord, 'id'>) {
+export async function addServiceRecord(userId: string, clientId: string, vehicleId: string, formData: Omit<ServiceRecord, 'id' | 'expirationDate'>) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
     const serviceHistoryCollection = collection(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
     
+    const startDate = new Date(formData.date);
+    const expirationDate = addMonths(startDate, formData.durationMonths);
+
     const newServiceData = {
         ...formData,
-        date: new Date(formData.date).toISOString() // Ensure date is in ISO format
+        date: startDate.toISOString(),
+        expirationDate: expirationDate.toISOString()
     };
     
     await addDoc(serviceHistoryCollection, newServiceData);
@@ -167,15 +171,19 @@ export async function addServiceRecord(userId: string, clientId: string, vehicle
     redirect(`/clients/${clientId}`);
 }
 
-export async function updateServiceRecord(userId: string, clientId: string, vehicleId: string, serviceId: string, formData: Omit<ServiceRecord, 'id'>) {
+export async function updateServiceRecord(userId: string, clientId: string, vehicleId: string, serviceId: string, formData: Omit<ServiceRecord, 'id' | 'expirationDate'>) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
     const serviceDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
     
+    const startDate = new Date(formData.date);
+    const expirationDate = addMonths(startDate, formData.durationMonths);
+
     const updatedServiceData = {
         ...formData,
-        date: new Date(formData.date).toISOString()
+        date: startDate.toISOString(),
+        expirationDate: expirationDate.toISOString()
     };
     
     await updateDoc(serviceDocRef, updatedServiceData);
@@ -204,15 +212,5 @@ export async function getServiceRecommendations(input: RecommendServicePackagesI
     } catch (error) {
         console.error('Error in getServiceRecommendations:', error);
         return { success: false, error: "Falha ao obter recomendações. Verifique o console do servidor para mais detalhes." };
-    }
-}
-
-export async function getExpirationPrediction(input: PredictServiceExpirationInput) {
-    try {
-        const result = await predictServiceExpiration(input);
-        return { success: true, data: result };
-    } catch (error) {
-        console.error('Error in getExpirationPrediction:', error);
-        return { success: false, error: "Falha ao prever a data de vencimento. Verifique o console do servidor para mais detalhes." };
     }
 }

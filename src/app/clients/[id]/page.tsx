@@ -6,11 +6,10 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil } from "lucide-react";
+import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, Clock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ServiceRecommendations } from "@/components/clients/recommendations";
-import { ExpirationPrediction } from "@/components/clients/expiration-prediction";
 import Link from "next/link";
 import {
     DropdownMenu,
@@ -24,6 +23,10 @@ import { Client } from "@/lib/types";
 import { AppLayout } from "@/components/layout/app-layout";
 import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button";
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { isPast, isWithinInterval, addMonths } from "date-fns";
+
 
 // Helper to safely convert Firestore timestamp or string to a Date object
 const toDate = (timestamp: any): Date => {
@@ -75,6 +78,20 @@ export default function ClientDetailPage() {
   }
 
   const formattedDate = toDate(client.createdAt).toLocaleDateString('pt-BR');
+
+  const getExpirationBadge = (expirationDate: string) => {
+    const now = new Date();
+    const expiry = new Date(expirationDate);
+    const oneMonthFromNow = addMonths(now, 1);
+
+    if (isPast(expiry)) {
+        return <Badge variant="destructive">Vencido</Badge>;
+    }
+    if (isWithinInterval(expiry, { start: now, end: oneMonthFromNow })) {
+        return <Badge variant="default" className="bg-yellow-500 text-black">Vence em breve</Badge>;
+    }
+    return <Badge variant="secondary">Em dia</Badge>;
+  }
 
   return (
     <AppLayout>
@@ -155,6 +172,7 @@ export default function ClientDetailPage() {
                                       <TableRow>
                                           <TableHead>Serviço</TableHead>
                                           <TableHead>Data</TableHead>
+                                          <TableHead>Vencimento</TableHead>
                                           <TableHead className="text-right">Custo</TableHead>
                                           <TableHead className="text-center">Ações</TableHead>
                                       </TableRow>
@@ -164,9 +182,14 @@ export default function ClientDetailPage() {
                                           <TableRow key={service.id}>
                                               <TableCell className="font-medium">{service.serviceType}</TableCell>
                                               <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
+                                              <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    {getExpirationBadge(service.expirationDate)}
+                                                    <span>{new Date(service.expirationDate).toLocaleDateString('pt-BR')}</span>
+                                                </div>
+                                              </TableCell>
                                               <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
                                               <TableCell className="text-center flex items-center justify-center gap-1">
-                                                  <ExpirationPrediction client={client} vehicle={vehicle} service={service} />
                                                   <Button variant="ghost" size="icon" asChild>
                                                     <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
                                                         <Pencil className="h-4 w-4" />

@@ -17,7 +17,7 @@ import {
 import { useTransition } from 'react';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { ServiceRecordFormData } from '@/lib/types';
+import { ServiceRecord, ServiceRecordFormData } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -27,17 +27,20 @@ const formSchema = z.object({
   serviceType: z.string().min(3, { message: 'O tipo de serviço deve ter pelo menos 3 caracteres.' }),
   date: z.date({ required_error: 'A data do serviço é obrigatória.' }),
   cost: z.coerce.number().min(0, { message: 'O custo não pode ser negativo.' }),
+  durationMonths: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 mês.' }),
   notes: z.string().optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 // Convert form data to match the expected type
-const toServiceRecordFormData = (data: z.infer<typeof formSchema>): ServiceRecordFormData => ({
+const toServiceRecordFormData = (data: FormValues): ServiceRecordFormData => ({
     ...data,
     date: data.date.toISOString(),
 });
 
 interface ServiceFormProps {
-  service?: ServiceRecordFormData;
+  service?: ServiceRecord;
   onSave: (data: ServiceRecordFormData) => Promise<any>;
   savingText?: string;
   cancelHref: string;
@@ -46,17 +49,18 @@ interface ServiceFormProps {
 export function ServiceForm({ service, onSave, savingText = 'Salvando...', cancelHref }: ServiceFormProps) {
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
         serviceType: service?.serviceType || '',
         date: service?.date ? new Date(service.date) : new Date(),
         cost: service?.cost || 0,
+        durationMonths: service?.durationMonths || 6,
         notes: service?.notes || ''
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     startTransition(async () => {
       await onSave(toServiceRecordFormData(values));
     });
@@ -78,7 +82,7 @@ export function ServiceForm({ service, onSave, savingText = 'Salvando...', cance
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FormField
                 control={form.control}
                 name="date"
@@ -96,7 +100,7 @@ export function ServiceForm({ service, onSave, savingText = 'Salvando...', cance
                             )}
                         >
                             {field.value ? (
-                            format(field.value, "PPP")
+                            format(field.value, "PPP", { })
                             ) : (
                             <span>Escolha uma data</span>
                             )}
@@ -118,6 +122,19 @@ export function ServiceForm({ service, onSave, savingText = 'Salvando...', cance
                     </Popover>
                     <FormMessage />
                 </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="durationMonths"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Duração (meses)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="1" placeholder="Ex: 6" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
                 )}
             />
             <FormField
