@@ -1,4 +1,3 @@
-import { getDashboardStats, getClientGrowth, getMonthlyRevenue, getUpcomingExpirations } from '@/lib/data';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { ClientGrowthChart } from '@/components/dashboard/client-growth-chart';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
@@ -7,10 +6,15 @@ import { DollarSign, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats();
-  const clientGrowthData = await getClientGrowth();
-  const monthlyRevenueData = await getMonthlyRevenue();
-  const upcomingExpirations = await getUpcomingExpirations();
+  // TODO: Re-implement with data from Firestore
+  const stats = {
+    clientRetention: 0,
+    upsellConversion: 0,
+    averageTicketSize: 0,
+  };
+  const clientGrowthData = [];
+  const monthlyRevenueData = [];
+  const upcomingExpirations = [];
 
   return (
     <div className="space-y-6">

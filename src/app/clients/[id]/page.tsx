@@ -1,3 +1,4 @@
+
 import { getClientById } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -50,7 +51,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
         <h2 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <Car /> Veículos
         </h2>
-        {client.vehicles.length > 0 ? (
+        {client.vehicles && client.vehicles.length > 0 ? (
           <div className="space-y-6">
             {client.vehicles.map(vehicle => (
                 <Card key={vehicle.id}>
@@ -77,6 +78,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
                         </div>
                         <div className="md:col-span-2">
                             <h4 className="font-semibold mb-2">Histórico de Serviços</h4>
+                            {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -99,6 +101,11 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
                                     ))}
                                 </TableBody>
                             </Table>
+                             ) : (
+                                <div className="text-center text-muted-foreground p-10 border rounded-md">
+                                    <p>Nenhum histórico de serviço para este veículo.</p>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

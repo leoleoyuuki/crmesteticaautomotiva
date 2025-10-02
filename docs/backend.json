@@ -1,0 +1,118 @@
+{
+    "entities": {
+        "client": {
+            "title": "Client",
+            "description": "Represents a client of the auto detailing shop.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The client's full name."
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "The client's email address."
+                },
+                "phone": {
+                    "type": "string",
+                    "description": "The client's phone number."
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the client was added."
+                },
+                "avatarUrl": {
+                    "type": "string",
+                    "description": "URL for the client's avatar image."
+                },
+                "avatarHint": {
+                    "type": "string",
+                    "description": "A hint for AI to find a similar avatar image."
+                }
+            },
+            "required": ["name", "email", "createdAt"]
+        },
+        "vehicle": {
+            "title": "Vehicle",
+            "description": "Represents a client's vehicle.",
+            "type": "object",
+            "properties": {
+                "make": {
+                    "type": "string",
+                    "description": "The make of the vehicle (e.g., Honda, Toyota)."
+                },
+                "model": {
+                    "type": "string",
+                    "description": "The model of the vehicle (e.g., Civic, Corolla)."
+                },
+                "year": {
+                    "type": "number",
+                    "description": "The manufacturing year of the vehicle."
+                },
+                "licensePlate": {
+                    "type": "string",
+                    "description": "The vehicle's license plate."
+                },
+                "imageUrl": {
+                    "type": "string",
+                    "description": "URL for the vehicle's image."
+                },
+                "imageHint": {
+                    "type": "string",
+                    "description": "A hint for AI to find a similar vehicle image."
+                }
+            },
+            "required": ["make", "model", "year"]
+        },
+        "serviceRecord": {
+            "title": "Service Record",
+            "description": "Represents a service performed on a vehicle.",
+            "type": "object",
+            "properties": {
+                "serviceType": {
+                    "type": "string",
+                    "description": "The type of service performed (e.g., Polimento Técnico)."
+                },
+                "date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the service was performed."
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Additional notes about the service."
+                },
+                "cost": {
+                    "type": "number",
+                    "description": "The cost of the service."
+                }
+            },
+            "required": ["serviceType", "date", "cost"]
+        }
+    },
+    "auth": {
+        "providers": ["anonymous"]
+    },
+    "firestore": {
+        "/clients/{clientId}": {
+            "schema": {
+                "$ref": "#/entities/client"
+            },
+            "description": "Stores client information."
+        },
+        "/clients/{clientId}/vehicles/{vehicleId}": {
+            "schema": {
+                "$ref": "#/entities/vehicle"
+            },
+            "description": "Stores vehicles for a specific client."
+        },
+        "/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}": {
+            "schema": {
+                "$ref": "#/entities/serviceRecord"
+            },
+            "description": "Stores the service history for a specific vehicle."
+        }
+    }
+}
