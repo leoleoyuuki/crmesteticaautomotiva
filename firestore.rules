@@ -1,81 +1,70 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a strict owner-only access model for client data, vehicles, and service history.
- * All data is nested under the /clients/{clientId} path, ensuring that each client's data is isolated.
+ * @description This ruleset allows public read access to the 'clients' collection and its subcollections, but restricts write access to authenticated users.
  *
- * Key Security Decisions:
- *  - Anonymous auth is used, so there is no way to validate identity. Rules are set to allow any signed in user, but there is no way to distinguish users.
- *  - Listing of the /clients collection is disabled.
+ * Core Philosophy:
+ * The ruleset prioritizes ease of use for prototyping. It allows public read access for all clients, vehicles, and service records. Write access, however, requires the user to be authenticated (signed in). This is sufficient to prevent anonymous data modification while still allowing unauthenticated users to browse the data.
  *
  * Data Structure:
- *  - /clients/{clientId}: Stores client information.
- *  - /clients/{clientId}/vehicles/{vehicleId}: Stores vehicles for a specific client.
- *  - /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Stores the service history for a specific vehicle.
+ * The data is organized hierarchically: /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
+ *
+ * Key Security Decisions:
+ * - Public Read Access: The `get` and `list` operations are open to all users, including unauthenticated users.
+ * - Authenticated Writes: `create`, `update`, and `delete` operations require authentication.
+ * - No Data Validation: Data validation is omitted in this prototyping phase for rapid iteration.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the /clients collection.
+     * @description Allows public read access to the 'clients' collection, but requires authentication for write access.
      * @path /clients/{clientId}
-     * @allow (create) - Any authenticated user can create a client document.
-     * @allow (get) - Any authenticated user can get a client document.
-     * @allow (update) - Any authenticated user can update a client document.
-     * @allow (delete) - Any authenticated user can delete a client document.
-     * @deny (list) - Listing all clients is denied.
-     * @principle Enforces document ownership for writes.
+     * @allow (get, list) - Any user can read client data.
+     * @allow (create, update, delete) - An authenticated user can modify client data.
+     * @deny (create, update, delete) - An unauthenticated user cannot modify client data.
+     * @principle Allows public read access with authenticated writes for clients
      */
     match /clients/{clientId} {
-      allow get: if isSignedIn();
-      allow list: if false;
-
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Controls access to the /clients/{clientId}/vehicles collection.
+     * @description Allows public read access to the 'vehicles' subcollection, but requires authentication for write access.
      * @path /clients/{clientId}/vehicles/{vehicleId}
-     * @allow (create) - Any authenticated user can create a vehicle document under a client.
-     * @allow (get) - Any authenticated user can get a vehicle document.
-     * @allow (update) - Any authenticated user can update a vehicle document.
-     * @allow (delete) - Any authenticated user can delete a vehicle document.
-     * @allow (list) - Any authenticated user can list vehicle documents for a client.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     * @allow (get, list) - Any user can read vehicle data.
+     * @allow (create, update, delete) - An authenticated user can modify vehicle data.
+     * @deny (create, update, delete) - An unauthenticated user cannot modify vehicle data.
+     * @principle Allows public read access with authenticated writes for vehicles
      */
     match /clients/{clientId}/vehicles/{vehicleId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Controls access to the /clients/{clientId}/vehicles/{vehicleId}/serviceHistory collection.
+     * @description Allows public read access to the 'serviceHistory' subcollection, but requires authentication for write access.
      * @path /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
-     * @allow (create) - Any authenticated user can create a service record document under a vehicle.
-     * @allow (get) - Any authenticated user can get a service record document.
-     * @allow (update) - Any authenticated user can update a service record document.
-     * @allow (delete) - Any authenticated user can delete a service record document.
-     * @allow (list) - Any authenticated user can list service record documents for a vehicle.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     * @allow (get, list) - Any user can read service history data.
+     * @allow (create, update, delete) - An authenticated user can modify service history data.
+     * @deny (create, update, delete) - An unauthenticated user cannot modify service history data.
+     * @principle Allows public read access with authenticated writes for service history
      */
     match /clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
-  }
 
-  // Helper function to determine if the user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
+    // Helper function to check if the user is signed in.
+    function isSignedIn() {
+      return request.auth != null;
+    }
   }
 }
