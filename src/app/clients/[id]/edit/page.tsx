@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
 import { getClientById } from '@/lib/data';
 import { updateClient } from '@/app/actions';
@@ -11,9 +11,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { ClientForm } from '@/components/clients/client-form';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function EditClientPage({ params }: { params: { id: string } }) {
+export default function EditClientPage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const params = useParams();
+  const clientId = params.id as string;
+  
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +28,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
 
     async function fetchClient() {
       if (!user) return;
-      const clientData = await getClientById(user.uid, params.id);
+      const clientData = await getClientById(user.uid, clientId);
       if (!clientData) {
         notFound();
       } else {
@@ -37,7 +40,7 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
     if (user) {
       fetchClient();
     }
-  }, [user, userLoading, params.id, router]);
+  }, [user, userLoading, clientId, router]);
 
   const handleUpdateClient = async (data: ClientFormData) => {
     if (!user || !client) return;
