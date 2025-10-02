@@ -94,8 +94,10 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-muted-foreground">&copy; 2024 CRM AutoEstética. Todos os direitos reservados.</p>
+      <footer className="w-full shrink-0 border-t">
+        <div className="container flex flex-col gap-2 sm:flex-row py-6 items-center justify-center px-4 md:px-6">
+            <p className="text-xs text-muted-foreground">&copy; 2024 CRM AutoEstética. Todos os direitos reservados.</p>
+        </div>
       </footer>
     </div>
   );
