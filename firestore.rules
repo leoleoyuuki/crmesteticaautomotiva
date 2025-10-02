@@ -1,27 +1,40 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for all data. Each user can only access their own profile and the data nested under their profile (clients, vehicles, service records).
+ * @fileoverview Firestore Security Rules for Auto Detailing Shop App
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user has full control over their
+ * own data, and no user can access another user's data. All data is nested under the /users/{userId}
+ * collection.
  *
  * Data Structure:
- * - /users/{userId}: User profile information, accessible only by the user.
- * - /users/{userId}/clients/{clientId}: Client information, accessible only by the user.
- * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}: Vehicle information, accessible only by the user.
- * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Service history information, accessible only by the user.
+ * The Firestore database is structured as follows:
+ * /users/{userId} - User profile information
+ * /users/{userId}/clients/{clientId} - Client information for a user
+ * /users/{userId}/clients/{clientId}/vehicles/{vehicleId} - Vehicles owned by a client
+ * /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} - Service history for a vehicle
  *
  * Key Security Decisions:
- * - User listing is disallowed to protect user privacy.
- * - All data is private and requires authentication.
+ * - Users can only access their own data.
+ * - Users cannot list other users' profiles.
+ * - No data validation is performed beyond ownership checks, allowing for flexible data shapes during prototyping.
+ *
+ * Denormalization for Authorization:
+ *  - The data is structured to avoid the need for complex queries or multiple `get()` calls within the rules.
+ *  Ownership is determined by the path; therefore, read and write access is granted to the user matching the `userId` in the path.
+ *
+ * Structural Segregation:
+ *  - All user-specific data is stored under the `/users/{userId}` path, ensuring private data is kept separate.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile information. Only the user can read and write their own profile.
+     * @description Allows users to read and write their own profile data.
      * @path /users/{userId}
-     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user.
-     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user.
-     * @principle Enforces document ownership for all operations.
+     * @allow (get, create, update, delete) User with ID 'user123' can read/write their profile.
+     * @deny (get, create, update, delete) User with ID 'user456' cannot read/write 'user123' profile.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
       function isSignedIn() {
@@ -32,23 +45,20 @@ service cloud.firestore {
         return request.auth.uid == userId;
       }
 
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
       allow get: if isSignedIn() && isOwner(userId);
       allow list: if false;
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Controls access to client information for a specific user. Only the user can read and write their clients.
+     * @description Allows users to manage their clients.
      * @path /users/{userId}/clients/{clientId}
-     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user/clients/client1.
-     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user/clients/client1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' can create a client under their profile.
+     * @allow (get, update, delete) User with ID 'user123' can read/write/delete a client under their profile.
+     * @deny (create, get, update, delete) User with ID 'user456' cannot manage 'user123' clients.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/clients/{clientId} {
       function isSignedIn() {
@@ -59,23 +69,20 @@ service cloud.firestore {
         return request.auth.uid == userId;
       }
 
-       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
       allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
+      allow list: if isSignedIn() && isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Controls access to vehicle information for a specific client. Only the user can read and write their clients' vehicles.
+     * @description Allows users to manage vehicles for their clients.
      * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}
-     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user/clients/client1/vehicles/vehicle1.
-     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user/clients/client1/vehicles/vehicle1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' can create a vehicle for their client.
+     * @allow (get, update, delete) User with ID 'user123' can read/write/delete a vehicle for their client.
+     * @deny (create, get, update, delete) User with ID 'user456' cannot manage vehicles for 'user123' clients.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/clients/{clientId}/vehicles/{vehicleId} {
       function isSignedIn() {
@@ -86,23 +93,20 @@ service cloud.firestore {
         return request.auth.uid == userId;
       }
 
-       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
       allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
+      allow list: if isSignedIn() && isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Controls access to service history information for a specific vehicle. Only the user can read and write their clients' vehicles' service history.
+     * @description Allows users to manage the service history for a specific vehicle.
      * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
-     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user/clients/client1/vehicles/vehicle1/serviceHistory/service1.
-     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user/clients/client1/vehicles/vehicle1/serviceHistory/service1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' can create a service record for a vehicle.
+     * @allow (get, update, delete) User with ID 'user123' can read/write/delete a service record for a vehicle.
+     * @deny (create, get, update, delete) User with ID 'user456' cannot manage service history for 'user123' clients' vehicles.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
       function isSignedIn() {
@@ -113,15 +117,11 @@ service cloud.firestore {
         return request.auth.uid == userId;
       }
 
-       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
       allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
+      allow list: if isSignedIn() && isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
   }
 }
