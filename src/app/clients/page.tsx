@@ -21,7 +21,12 @@ export default function ClientsPage() {
     async function fetchClients() {
       try {
         const clientsData = await getClients();
-        setClients(clientsData);
+        // Convert Firestore Timestamp to string
+        const formattedClients = clientsData.map(client => ({
+            ...client,
+            createdAt: client.createdAt ? new Date((client.createdAt as any).seconds * 1000).toISOString() : new Date().toISOString(),
+        }));
+        setClients(formattedClients);
       } catch (error) {
         console.error("Failed to fetch clients:", error);
       } finally {
@@ -39,9 +44,11 @@ export default function ClientsPage() {
                 <CardTitle className="font-headline">Clientes</CardTitle>
                 <CardDescription>Gerencie seus clientes e veja seus históricos de serviço.</CardDescription>
             </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar Cliente
+            <Button asChild>
+                <Link href="/clients/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Adicionar Cliente
+                </Link>
             </Button>
         </div>
       </CardHeader>
