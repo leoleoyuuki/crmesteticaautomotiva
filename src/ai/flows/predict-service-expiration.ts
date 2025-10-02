@@ -65,7 +65,7 @@ const predictServiceExpirationFlow = ai.defineFlow(
     outputSchema: PredictServiceExpirationOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt.generate({input});
     return output!;
   }
 );

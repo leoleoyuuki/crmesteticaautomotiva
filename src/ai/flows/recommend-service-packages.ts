@@ -32,6 +32,7 @@ const RecommendServicePackagesOutputSchema = z.object({
     .describe('A list of recommended service packages tailored to the client and vehicle.'),
   reasoning: z
     .string()
+
     .describe('The AI reasoning behind the recommended packages.'),
 });
 export type RecommendServicePackagesOutput = z.infer<
@@ -66,7 +67,7 @@ const recommendServicePackagesFlow = ai.defineFlow(
     outputSchema: RecommendServicePackagesOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt.generate({input});
     return output!;
   }
 );
