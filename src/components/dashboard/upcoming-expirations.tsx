@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Bell, MessageCircle } from "lucide-react";
+import { Bell, MessageCircle, User } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -14,7 +14,7 @@ import { ScrollArea } from "../ui/scroll-area";
 type UpcomingExpiration = {
     clientId: string;
     clientName: string;
-    clientAvatar: string;
+    clientAvatar?: string;
     clientPhone: string;
     vehicleId: string;
     vehicleMake: string;
@@ -73,8 +73,12 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-9 w-9">
-                                            <AvatarImage src={exp.clientAvatar} alt={exp.clientName} />
-                                            <AvatarFallback>{exp.clientName.charAt(0)}</AvatarFallback>
+                                            {exp.clientAvatar ? (
+                                                <AvatarImage src={exp.clientAvatar} alt={exp.clientName} />
+                                            ) : null}
+                                            <AvatarFallback className="bg-muted text-muted-foreground">
+                                                <User className="h-5 w-5" />
+                                            </AvatarFallback>
                                         </Avatar>
                                         <div className="font-medium">{exp.clientName}</div>
                                     </div>

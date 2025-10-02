@@ -17,6 +17,7 @@ import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ClientFormData } from '@/lib/types';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -30,10 +31,8 @@ const formSchema = z.object({
   }),
 });
 
-type ClientFormData = z.infer<typeof formSchema>;
-
 interface ClientFormProps {
-  client?: Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>;
+  client?: ClientFormData;
   onSave: (data: ClientFormData) => Promise<any>;
   savingText?: string;
 }
@@ -111,15 +110,4 @@ export function ClientForm({ client, onSave, savingText = 'Salvando...' }: Clien
       </form>
     </Form>
   );
-}
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  createdAt: string;
-  avatarUrl: string;
-  avatarHint: string;
-  vehicles: any[];
 }

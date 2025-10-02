@@ -2,7 +2,7 @@
 
 import { collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
-import type { Client, Vehicle, ServiceRecord, Notification } from './types';
+import type { Client, Vehicle, ServiceRecord } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -41,8 +41,6 @@ export async function getClients(userId: string): Promise<Client[]> {
                 name: clientData.name,
                 email: clientData.email,
                 phone: clientData.phone,
-                avatarUrl: clientData.avatarUrl,
-                avatarHint: clientData.avatarHint,
                 createdAt: toISOString(clientData.createdAt),
                 vehicles: []
             };
@@ -58,8 +56,6 @@ export async function getClients(userId: string): Promise<Client[]> {
                     model: vehicleData.model,
                     year: vehicleData.year,
                     licensePlate: vehicleData.licensePlate,
-                    imageUrl: vehicleData.imageUrl,
-                    imageHint: vehicleData.imageHint,
                     serviceHistory: []
                 };
 

@@ -3,27 +3,23 @@
 import { recommendServicePackages, RecommendServicePackagesInput } from '@/ai/flows/recommend-service-packages';
 import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
-import { Client, ServiceRecord, Vehicle } from '@/lib/types';
+import { ClientFormData, ServiceRecord, ServiceRecordFormData, Vehicle, VehicleFormData } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { addMonths } from 'date-fns';
 
 // Client Actions
-export async function addClient(userId: string, formData: Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>) {
+export async function addClient(userId: string, formData: ClientFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
-    const randomAvatar = PlaceHolderImages.filter(img => img.id.startsWith('avatar-'))[Math.floor(Math.random() * 4)];
     const clientsCollection = collection(firestore, 'users', userId, 'clients');
     
     const newClientData = {
         ...formData,
         createdAt: serverTimestamp(),
-        avatarUrl: randomAvatar.imageUrl,
-        avatarHint: randomAvatar.imageHint,
     };
 
     try {
@@ -42,14 +38,15 @@ export async function addClient(userId: string, formData: Omit<Client, 'id' | 'c
     redirect('/clients');
 }
 
-export async function updateClient(userId: string, clientId: string, formData: Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>) {
+export async function updateClient(userId: string, clientId: string, formData: ClientFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
-    if (!userId) throw new Error("User not authenticated");
+    if (!userId) throw new
+Error("User not authenticated");
 
     const clientDocRef = doc(firestore, 'users', userId, 'clients', clientId);
 
     try {
-        await updateDoc(clientDocRef, formData);
+        await updateDoc(clientDocRef, formData as any);
     } catch (serverError) {
         const permissionError = new FirestorePermissionError({
             path: clientDocRef.path,
@@ -99,31 +96,23 @@ export async function deleteClient(userId: string, clientId: string) {
 }
 
 // Vehicle Actions
-export async function addVehicle(userId: string, clientId: string, formData: Omit<Vehicle, 'id' | 'imageUrl' | 'imageHint' | 'serviceHistory'>) {
+export async function addVehicle(userId: string, clientId: string, formData: VehicleFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
-    const randomVehicleImage = PlaceHolderImages.filter(img => img.id.startsWith('vehicle-'))[Math.floor(Math.random() * 4)];
     const vehiclesCollection = collection(firestore, 'users', userId, 'clients', clientId, 'vehicles');
-
-    const newVehicleData = {
-        ...formData,
-        imageUrl: randomVehicleImage.imageUrl,
-        imageHint: randomVehicleImage.imageHint,
-    };
-
-    await addDoc(vehiclesCollection, newVehicleData);
+    await addDoc(vehiclesCollection, formData);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
 }
 
-export async function updateVehicle(userId: string, clientId: string, vehicleId: string, formData: Omit<Vehicle, 'id' | 'imageUrl' | 'imageHint' | 'serviceHistory'>) {
+export async function updateVehicle(userId: string, clientId: string, vehicleId: string, formData: VehicleFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
     const vehicleDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId);
-    await updateDoc(vehicleDocRef, formData);
+    await updateDoc(vehicleDocRef, formData as any);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -150,7 +139,7 @@ export async function deleteVehicle(userId: string, clientId: string, vehicleId:
 
 
 // Service Record Actions
-export async function addServiceRecord(userId: string, clientId: string, vehicleId: string, formData: Omit<ServiceRecord, 'id' | 'expirationDate'>) {
+export async function addServiceRecord(userId: string, clientId: string, vehicleId: string, formData: ServiceRecordFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
@@ -171,7 +160,7 @@ export async function addServiceRecord(userId: string, clientId: string, vehicle
     redirect(`/clients/${clientId}`);
 }
 
-export async function updateServiceRecord(userId: string, clientId: string, vehicleId: string, serviceId: string, formData: Omit<ServiceRecord, 'id' | 'expirationDate'>) {
+export async function updateServiceRecord(userId: string, clientId: string, vehicleId: string, serviceId: string, formData: ServiceRecordFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
     if (!userId) throw new Error("User not authenticated");
 
@@ -186,7 +175,7 @@ export async function updateServiceRecord(userId: string, clientId: string, vehi
         expirationDate: expirationDate.toISOString()
     };
     
-    await updateDoc(serviceDocRef, updatedServiceData);
+    await updateDoc(serviceDocRef, updatedServiceData as any);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);

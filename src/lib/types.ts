@@ -4,9 +4,9 @@ export interface Client {
   email: string;
   phone: string;
   createdAt: string;
-  avatarUrl: string;
-  avatarHint: string;
   vehicles: Vehicle[];
+  avatarUrl?: string; // Optional
+  avatarHint?: string; // Optional
 }
 
 export type ClientFormData = Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>;
@@ -17,9 +17,9 @@ export interface Vehicle {
   model: string;
   year: number;
   licensePlate: string;
-  imageUrl: string;
-  imageHint: string;
   serviceHistory: ServiceRecord[];
+  imageUrl?: string; // Optional
+  imageHint?: string; // Optional
 }
 
 export type VehicleFormData = Omit<Vehicle, 'id' | 'imageUrl' | 'imageHint' | 'serviceHistory'>;

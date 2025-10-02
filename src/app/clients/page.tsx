@@ -6,7 +6,7 @@ import { getClients } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -151,8 +151,9 @@ export default function ClientsPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
-                          <AvatarImage src={client.avatarUrl} alt={client.name} data-ai-hint={client.avatarHint} />
-                          <AvatarFallback>{client.name.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="bg-muted text-muted-foreground">
+                            <User className="h-5 w-5" />
+                          </AvatarFallback>
                       </Avatar>
                       <div className="font-medium">{client.name}</div>
                     </div>
