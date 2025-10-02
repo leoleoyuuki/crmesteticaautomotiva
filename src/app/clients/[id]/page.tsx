@@ -25,6 +25,20 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button";
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 
+// Helper to safely convert Firestore timestamp or string to a Date object
+const toDate = (timestamp: any): Date => {
+    if (timestamp && typeof timestamp.seconds === 'number') {
+      return new Date(timestamp.seconds * 1000);
+    }
+    if (typeof timestamp === 'string') {
+      const date = new Date(timestamp);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    return new Date(); // Fallback to now if conversion fails
+};
+
 
 export default function ClientDetailPage() {
   const { user, loading: userLoading } = useUser();
@@ -60,6 +74,8 @@ export default function ClientDetailPage() {
     return <div className="flex h-screen items-center justify-center">Carregando...</div>;
   }
 
+  const formattedDate = toDate(client.createdAt).toLocaleDateString('pt-BR');
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -74,7 +90,7 @@ export default function ClientDetailPage() {
                 <CardDescription className="flex items-center flex-wrap gap-x-4 gap-y-1 text-base">
                   <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>
                   <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {client.phone}</span>
-                  <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Cliente desde {new Date(client.createdAt).toLocaleDateString('pt-BR')}</span>
+                  <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Cliente desde {formattedDate}</span>
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -184,5 +200,3 @@ export default function ClientDetailPage() {
     </AppLayout>
   );
 }
-
-    

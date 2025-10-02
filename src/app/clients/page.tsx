@@ -17,6 +17,20 @@ import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/app-layout';
 import { DeleteClientButton } from '@/components/clients/delete-client-button';
 
+// Helper to safely convert Firestore timestamp or string to a Date object
+const toDate = (timestamp: any): Date => {
+  if (timestamp && typeof timestamp.seconds === 'number') {
+    return new Date(timestamp.seconds * 1000);
+  }
+  if (typeof timestamp === 'string') {
+    const date = new Date(timestamp);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return new Date(); // Fallback to now if conversion fails
+};
+
 
 export default function ClientsPage() {
   const { user, loading: userLoading } = useUser();
@@ -34,17 +48,10 @@ export default function ClientsPage() {
       if (!user) return;
       try {
         const clientsData = await getClients(user.uid);
-        const formattedClients = clientsData.map(client => {
-            // Firestore timestamps can be objects with seconds and nanoseconds
-            const createdAtDate = client.createdAt && (client.createdAt as any).seconds 
-                ? new Date((client.createdAt as any).seconds * 1000)
-                : new Date(); // Fallback for any other case
-
-            return {
-                ...client,
-                createdAt: createdAtDate.toISOString(),
-            };
-        });
+        const formattedClients = clientsData.map(client => ({
+          ...client,
+          createdAt: toDate(client.createdAt).toISOString(),
+        }));
         setClients(formattedClients);
       } catch (error) {
         console.error("Failed to fetch clients:", error);
