@@ -28,6 +28,15 @@ export function AppHeader() {
     router.push('/login');
   };
 
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'A';
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length - 1][0]}`;
+    }
+    return name.substring(0, 2);
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
         <SidebarTrigger className="md:hidden"/>
@@ -44,13 +53,13 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-9 w-9">
-                        <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/avatar-header/100/100"} alt={user?.displayName || "Avatar"} data-ai-hint="person face" />
-                        <AvatarFallback>{user?.displayName?.charAt(0) || 'A'}</AvatarFallback>
+                        <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "Avatar"} data-ai-hint="person face" />
+                        <AvatarFallback>{getInitials(user?.displayName || user?.email)}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>{user?.displayName || 'Minha Conta'}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.displayName || user?.email || 'Minha Conta'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Configurações</DropdownMenuItem>
                 <DropdownMenuItem>Suporte</DropdownMenuItem>

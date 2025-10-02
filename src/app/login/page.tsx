@@ -1,47 +1,166 @@
 'use client';
 
+import { useState } from 'react';
 import { auth } from '@/firebase/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2 } from 'lucide-react';
 
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
-      <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-      <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-      <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.519-3.317-11.28-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
-      <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.022,35.244,44,30.036,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-    </svg>
-  );
+const loginSchema = z.object({
+  email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
+  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
+});
+
+const signupSchema = z.object({
+  name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
+  email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
+  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type SignupFormData = z.infer<typeof signupSchema>;
+
 
 export default function LoginPage() {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const signupForm = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
+
+  const handleSignIn = async ({ email, password }: LoginFormData) => {
+    setLoading(true);
+    setError(null);
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
-    } catch (error) {
-      console.error('Error signing in with Google: ', error);
+    } catch (error: any) {
+      setError(getFirebaseErrorMessage(error.code));
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleSignUp = async ({ name, email, password }: SignupFormData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: name });
+      router.push('/dashboard');
+    } catch (error: any) {
+        setError(getFirebaseErrorMessage(error.code));
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const getFirebaseErrorMessage = (errorCode: string) => {
+    switch (errorCode) {
+      case 'auth/invalid-email':
+        return 'O formato do e-mail é inválido.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        return 'E-mail ou senha incorretos.';
+      case 'auth/email-already-in-use':
+        return 'Este e-mail já está em uso por outra conta.';
+      case 'auth/weak-password':
+        return 'A senha é muito fraca. Tente uma mais forte.';
+      default:
+        return 'Ocorreu um erro. Por favor, tente novamente.';
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-headline">Bem-vindo de volta!</CardTitle>
-          <CardDescription>Faça login para continuar gerenciando sua estética automotiva.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={handleSignIn} className="w-full" size="lg">
-            <GoogleIcon className="mr-2" />
-            Entrar com Google
-          </Button>
-        </CardContent>
-      </Card>
+        <Tabs defaultValue="login" className="w-full max-w-md">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Entrar</TabsTrigger>
+                <TabsTrigger value="signup">Criar Conta</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+                <Card>
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-3xl font-headline">Bem-vindo de volta!</CardTitle>
+                        <CardDescription>Faça login para continuar gerenciando sua estética automotiva.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <form onSubmit={loginForm.handleSubmit(handleSignIn)} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="login-email">Email</Label>
+                            <Input id="login-email" type="email" placeholder="seu@email.com" {...loginForm.register('email')} />
+                            {loginForm.formState.errors.email && <p className="text-sm text-destructive">{loginForm.formState.errors.email.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="login-password">Senha</Label>
+                            <Input id="login-password" type="password" {...loginForm.register('password')} />
+                            {loginForm.formState.errors.password && <p className="text-sm text-destructive">{loginForm.formState.errors.password.message}</p>}
+                        </div>
+                        {error && (
+                            <Alert variant="destructive">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Entrar
+                        </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="signup">
+                <Card>
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-3xl font-headline">Crie sua Conta</CardTitle>
+                        <CardDescription>Comece a gerenciar seus clientes de forma inteligente.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                    <form onSubmit={signupForm.handleSubmit(handleSignUp)} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="signup-name">Seu Nome</Label>
+                            <Input id="signup-name" type="text" placeholder="João da Silva" {...signupForm.register('name')} />
+                            {signupForm.formState.errors.name && <p className="text-sm text-destructive">{signupForm.formState.errors.name.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="signup-email">Email</Label>
+                            <Input id="signup-email" type="email" placeholder="seu@email.com" {...signupForm.register('email')} />
+                            {signupForm.formState.errors.email && <p className="text-sm text-destructive">{signupForm.formState.errors.email.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="signup-password">Senha</Label>
+                            <Input id="signup-password" type="password" {...signupForm.register('password')} />
+                            {signupForm.formState.errors.password && <p className="text-sm text-destructive">{signupForm.formState.errors.password.message}</p>}
+                        </div>
+                        {error && (
+                             <Alert variant="destructive">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Criar Conta
+                        </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
     </div>
   );
 }
