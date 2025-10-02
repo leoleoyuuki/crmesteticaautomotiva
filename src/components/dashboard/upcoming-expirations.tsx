@@ -47,7 +47,7 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
             Próximos Vencimentos
         </CardTitle>
         <CardDescription>
-            Serviços com vencimento próximo para você entrar em contato com o cliente.
+            Serviços com vencimento próximo. Para serviços que vencem em menos de 30 dias, um gatilho de mensagem do WhatsApp estará disponível.
         </CardDescription>
       </CardHeader>
       <CardContent>
