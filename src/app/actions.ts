@@ -11,16 +11,19 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-export async function addClient(formData: Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>) {
+export async function addClient(userId: string, formData: Omit<Client, 'id' | 'createdAt' | 'vehicles' | 'avatarUrl' | 'avatarHint'>) {
     if (!firestore) {
         console.error("Firestore not initialized");
         return { success: false, error: "O Firestore não foi inicializado." };
+    }
+    if (!userId) {
+        return { success: false, error: "Usuário não autenticado." };
     }
 
     const randomAvatar = PlaceHolderImages.filter(img => img.id.startsWith('avatar-'))[Math.floor(Math.random() * 4)];
 
     try {
-        const clientsCollection = collection(firestore, 'clients');
+        const clientsCollection = collection(firestore, 'users', userId, 'clients');
         const newClientData = {
             ...formData,
             createdAt: serverTimestamp(),
@@ -28,7 +31,7 @@ export async function addClient(formData: Omit<Client, 'id' | 'createdAt' | 'veh
             avatarHint: randomAvatar.imageHint,
         };
 
-        addDoc(clientsCollection, newClientData).catch(async (serverError) => {
+        await addDoc(clientsCollection, newClientData).catch(async (serverError) => {
             const permissionError = new FirestorePermissionError({
                 path: clientsCollection.path,
                 operation: 'create',

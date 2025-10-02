@@ -7,18 +7,18 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 
-export async function getClients(): Promise<Client[]> {
+export async function getClients(userId: string): Promise<Client[]> {
     if (!firestore) {
         console.error("Firestore not initialized");
         return [];
     }
-    const clientsCollection = collection(firestore, 'clients');
+    const clientsCollection = collection(firestore, 'users', userId, 'clients');
     try {
         const clientSnapshot = await getDocs(clientsCollection);
         const clientsList = clientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
         
         const clientsWithVehicles = await Promise.all(clientsList.map(async (client) => {
-            const vehiclesCollection = collection(firestore, 'clients', client.id, 'vehicles');
+            const vehiclesCollection = collection(firestore, 'users', userId, 'clients', client.id, 'vehicles');
             const vehiclesSnapshot = await getDocs(vehiclesCollection);
             const vehicles = vehiclesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Omit<Vehicle, 'serviceHistory'>));
             return { ...client, vehicles: vehicles || [] };
@@ -39,12 +39,12 @@ export async function getClients(): Promise<Client[]> {
     }
 }
 
-export async function getClientById(id: string): Promise<Client | undefined> {
+export async function getClientById(userId: string, id: string): Promise<Client | undefined> {
     if (!firestore) {
         console.error("Firestore not initialized");
         return undefined;
     }
-    const clientDocRef = doc(firestore, 'clients', id);
+    const clientDocRef = doc(firestore, 'users', userId, 'clients', id);
     try {
         const clientDoc = await getDoc(clientDocRef);
 
