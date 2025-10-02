@@ -1,125 +1,127 @@
 /**
- * @fileoverview Firestore Security Rules for Auto Detail Shop App
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model. Each user can only
- * access their own profile and the data (clients, vehicles, service records)
- * associated with their profile.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for all data. Each user can only access their own profile and the data nested under their profile (clients, vehicles, service records).
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile information.
- * - /users/{userId}/clients/{clientId}: Stores client information for a specific user.
- * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}: Stores vehicles for a specific client.
- * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Stores the service history for a specific vehicle.
+ * - /users/{userId}: User profile information, accessible only by the user.
+ * - /users/{userId}/clients/{clientId}: Client information, accessible only by the user.
+ * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}: Vehicle information, accessible only by the user.
+ * - /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}: Service history information, accessible only by the user.
  *
  * Key Security Decisions:
- * - Users can only list clients under their own user ID.
- * - All data is nested under /users/{userId}, enforcing clear ownership.
- * - The ruleset does not attempt to validate the specific data types of all fields, focusing
- *   instead on authorization and relationship integrity.
- *
- * Denormalization for Authorization:
- *  - The data model inherently uses denormalization. The client, vehicle, and service records
- *    are nested under the user's ID, making the ownership check straightforward.
+ * - User listing is disallowed to protect user privacy.
+ * - All data is private and requires authentication.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Enforces access control for user profiles.
+     * @description Controls access to user profile information. Only the user can read and write their own profile.
      * @path /users/{userId}
-     * @allow (create) - User can create their own profile if the userId matches their auth UID.
-     * @allow (get, update, delete) - User can only access their own profile.
-     * @deny (create) - User cannot create a profile with a userId that doesn't match their auth UID.
-     * @deny (get, update, delete) - User cannot access another user's profile.
-     * @principle Enforces document ownership for writes.
+     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user.
+     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+      function isSignedIn() {
+        return request.auth != null;
       }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
 
-      allow get: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.email is string && request.resource.data.name is string;
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces access control for clients under a user's profile.
+     * @description Controls access to client information for a specific user. Only the user can read and write their clients.
      * @path /users/{userId}/clients/{clientId}
-     * @allow (create) - User can create a client under their own profile.
-     * @allow (get, list, update, delete) - User can only access clients under their own profile.
-     * @deny (create) - User cannot create a client under another user's profile.
-     * @deny (get, list, update, delete) - User cannot access clients under another user's profile.
-     * @principle Restricts access to a user's own data tree.
+     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user/clients/client1.
+     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user/clients/client1.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId}/clients/{clientId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      function isSignedIn() {
+        return request.auth != null;
       }
 
-      allow get: if isExistingOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.name is string && request.resource.data.email is string && request.resource.data.createdAt is string;
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Enforces access control for vehicles under a client's profile.
-     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}
-     * @allow (create) - User can create a vehicle under their own client profile.
-     * @allow (get, list, update, delete) - User can only access vehicles under their own client profile.
-     * @deny (create) - User cannot create a vehicle under another user's client profile.
-     * @deny (get, list, update, delete) - User cannot access vehicles under another user's client profile.
-     * @principle Restricts access to a user's own data tree.
-     */
-    match /users/{userId}/clients/{clientId}/vehicles/{vehicleId} {
       function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
+
        function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
 
-      allow get: if isExistingOwner(userId);
-      allow list: if isExistingOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.make is string && request.resource.data.model is string && request.resource.data.year is number;
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces access control for service history under a vehicle's profile.
-     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
-     * @allow (create) - User can create a service record under their own vehicle profile.
-     * @allow (get, list, update, delete) - User can only access service records under their own vehicle profile.
-     * @deny (create) - User cannot create a service record under another user's vehicle profile.
-     * @deny (get, list, update, delete) - User cannot access service records under another user's vehicle profile.
-     * @principle Restricts access to a user's own data tree.
+     * @description Controls access to vehicle information for a specific client. Only the user can read and write their clients' vehicles.
+     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}
+     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user/clients/client1/vehicles/vehicle1.
+     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user/clients/client1/vehicles/vehicle1.
+     * @principle Enforces document ownership for all operations.
      */
-    match /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+    match /users/{userId}/clients/{clientId}/vehicles/{vehicleId} {
+      function isSignedIn() {
+        return request.auth != null;
       }
-      function isExistingOwner(userId) {
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
 
-      allow get: if isExistingOwner(userId);
-      allow list: if isExistingOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.serviceType is string && request.resource.data.date is string && request.resource.data.cost is number;
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to service history information for a specific vehicle. Only the user can read and write their clients' vehicles' service history.
+     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
+     * @allow (get, create, update, delete): User 'test_user' can access /users/test_user/clients/client1/vehicles/vehicle1/serviceHistory/service1.
+     * @deny (get, create, update, delete): User 'test_user' cannot access /users/other_user/clients/client1/vehicles/vehicle1/serviceHistory/service1.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+       function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
   }
 }

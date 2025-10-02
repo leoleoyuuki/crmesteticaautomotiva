@@ -22,28 +22,23 @@ export async function addClient(userId: string, formData: Omit<Client, 'id' | 'c
 
     const randomAvatar = PlaceHolderImages.filter(img => img.id.startsWith('avatar-'))[Math.floor(Math.random() * 4)];
 
-    try {
-        const clientsCollection = collection(firestore, 'users', userId, 'clients');
-        const newClientData = {
-            ...formData,
-            createdAt: serverTimestamp(),
-            avatarUrl: randomAvatar.imageUrl,
-            avatarHint: randomAvatar.imageHint,
-        };
-
-        await addDoc(clientsCollection, newClientData).catch(async (serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: clientsCollection.path,
-                operation: 'create',
-                requestResourceData: newClientData
-            });
-            errorEmitter.emit('permission-error', permissionError);
+    const clientsCollection = collection(firestore, 'users', userId, 'clients');
+    const newClientData = {
+        ...formData,
+        createdAt: serverTimestamp(),
+        avatarUrl: randomAvatar.imageUrl,
+        avatarHint: randomAvatar.imageHint,
+    };
+    
+    await addDoc(clientsCollection, newClientData).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: clientsCollection.path,
+            operation: 'create',
+            requestResourceData: newClientData
         });
-
-    } catch (error: any) {
-        console.error('Error adding client:', error);
-        return { success: false, error: error.message || 'Falha ao adicionar cliente.' };
-    }
+        errorEmitter.emit('permission-error', permissionError);
+        // We don't return anything here as the error is thrown globally
+    });
     
     revalidatePath('/clients');
     redirect('/clients');
