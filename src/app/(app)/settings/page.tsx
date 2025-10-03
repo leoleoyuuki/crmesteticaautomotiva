@@ -1,9 +1,7 @@
-import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SettingsPage() {
   return (
-    <AppLayout>
         <div className="space-y-6">
             <Card>
             <CardHeader>
@@ -18,6 +16,5 @@ export default function SettingsPage() {
             </CardContent>
             </Card>
         </div>
-    </AppLayout>
   );
 }

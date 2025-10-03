@@ -2,7 +2,6 @@
 
 import { useRouter, notFound, useParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
-import { AppLayout } from '@/components/layout/app-layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ServiceForm } from '@/components/services/service-form';
 import { addServiceRecord } from '@/app/actions';
@@ -11,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { getClientById, getVehicleById } from '@/lib/data';
 
 export default function NewServicePage() {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser()!;
   const router = useRouter();
   const params = useParams();
   const clientId = params.id as string;
@@ -22,11 +21,6 @@ export default function NewServicePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-      return;
-    }
-    
     async function fetchData() {
         if(!user) return;
         const client = await getClientById(user.uid, clientId);
@@ -45,7 +39,7 @@ export default function NewServicePage() {
         fetchData();
     }
 
-  }, [user, userLoading, clientId, vehicleId, router]);
+  }, [user, clientId, vehicleId, router]);
 
 
   const handleAddService = async (data: ServiceRecordFormData) => {
@@ -53,12 +47,11 @@ export default function NewServicePage() {
     await addServiceRecord(user.uid, clientId, vehicleId, data);
   };
   
-  if(userLoading || loading) {
-      return <AppLayout><div className="flex h-screen items-center justify-center">Carregando...</div></AppLayout>
+  if(loading) {
+      return <div className="flex h-screen items-center justify-center">Carregando...</div>;
   }
 
   return (
-    <AppLayout>
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Adicionar Novo Serviço</CardTitle>
@@ -74,6 +67,5 @@ export default function NewServicePage() {
           />
         </CardContent>
       </Card>
-    </AppLayout>
   );
 }

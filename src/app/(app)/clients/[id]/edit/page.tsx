@@ -6,13 +6,12 @@ import { useUser } from '@/firebase/auth/use-user';
 import { getClientById } from '@/lib/data';
 import { updateClient } from '@/app/actions';
 import { Client, ClientFormData } from '@/lib/types';
-import { AppLayout } from '@/components/layout/app-layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ClientForm } from '@/components/clients/client-form';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser()!;
   const router = useRouter();
   const params = useParams();
   const clientId = params.id as string;
@@ -21,11 +20,6 @@ export default function EditClientPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-      return;
-    }
-
     async function fetchClient() {
       if (!user) return;
       const clientData = await getClientById(user.uid, clientId);
@@ -40,16 +34,15 @@ export default function EditClientPage() {
     if (user) {
       fetchClient();
     }
-  }, [user, userLoading, clientId, router]);
+  }, [user, clientId, router]);
 
   const handleUpdateClient = async (data: ClientFormData) => {
     if (!user || !client) return;
     await updateClient(user.uid, client.id, data);
   };
 
-  if (userLoading || loading || !client) {
+  if (loading || !client) {
     return (
-      <AppLayout>
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-48" />
@@ -74,12 +67,10 @@ export default function EditClientPage() {
             </div>
           </CardContent>
         </Card>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Editar Cliente</CardTitle>
@@ -93,6 +84,5 @@ export default function EditClientPage() {
           />
         </CardContent>
       </Card>
-    </AppLayout>
   );
 }

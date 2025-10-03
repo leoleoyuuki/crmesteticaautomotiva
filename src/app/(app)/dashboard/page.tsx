@@ -7,9 +7,7 @@ import { UpcomingExpirations } from '@/components/dashboard/upcoming-expirations
 import { DollarSign, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { AppLayout } from '@/components/layout/app-layout';
 import { getClients } from '@/lib/data';
 import { Client } from '@/lib/types';
 import { subMonths, isAfter, parseISO } from 'date-fns';
@@ -29,29 +27,20 @@ export type UpcomingExpiration = {
 };
 
 export default function DashboardPage() {
-  const { user, loading: userLoading } = useUser();
-  const router = useRouter();
+  const { user } = useUser()!; // Non-null assertion because layout handles auth
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearch();
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-      return;
-    }
-    
     async function fetchData() {
         if (!user) return;
         const clientData = await getClients(user.uid);
         setClients(clientData);
         setLoading(false);
     }
-    
-    if (user) {
-        fetchData();
-    }
-  }, [user, userLoading, router]);
+    fetchData();
+  }, [user]);
   
   const { stats, clientGrowthData, monthlyRevenueData, upcomingExpirations } = useMemo(() => {
     if (!clients.length) {
@@ -157,9 +146,8 @@ export default function DashboardPage() {
     );
   }, [upcomingExpirations, searchTerm]);
 
-  if (userLoading || loading || !user) {
+  if (loading) {
     return (
-      <AppLayout>
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Skeleton className="h-[126px]" />
@@ -172,12 +160,10 @@ export default function DashboardPage() {
           </div>
           <Skeleton className="h-[400px]" />
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <StatCard title="Receita Total" value={`R$${stats.totalRevenue.toFixed(2).replace('.', ',')}`} icon={DollarSign} description="Receita de todos os serviços" />
@@ -206,6 +192,5 @@ export default function DashboardPage() {
         </div>
         <UpcomingExpirations expirations={filteredExpirations} />
       </div>
-    </AppLayout>
   );
 }

@@ -13,8 +13,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Client } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
-import { useRouter } from 'next/navigation';
-import { AppLayout } from '@/components/layout/app-layout';
 import { DeleteClientButton } from '@/components/clients/delete-client-button';
 import { useSearch } from '@/context/search-provider';
 
@@ -34,18 +32,12 @@ const toDate = (timestamp: any): Date => {
 
 
 export default function ClientsPage() {
-  const { user, loading: userLoading } = useUser();
-  const router = useRouter();
+  const { user } = useUser()!;
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearch();
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-      return;
-    }
-
     async function fetchClients() {
       if (!user) return;
       try {
@@ -64,7 +56,7 @@ export default function ClientsPage() {
     if (user) {
       fetchClients();
     }
-  }, [user, userLoading, router]);
+  }, [user]);
 
   const filteredClients = useMemo(() => {
     if (!searchTerm) return clients;
@@ -73,9 +65,8 @@ export default function ClientsPage() {
     );
   }, [clients, searchTerm]);
 
-  if (userLoading || loading || !user) {
+  if (loading || !user) {
     return (
-      <AppLayout>
         <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -121,12 +112,10 @@ export default function ClientsPage() {
         </Table>
         </CardContent>
         </Card>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -205,6 +194,5 @@ export default function ClientsPage() {
           </Table>
         </CardContent>
       </Card>
-    </AppLayout>
   );
 }

@@ -2,7 +2,6 @@
 
 import { getClientById } from "@/lib/data";
 import { notFound, useRouter, useParams } from "next/navigation";
-import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ import {
 import { useUser } from "@/firebase/auth/use-user";
 import { useEffect, useState } from "react";
 import { Client } from "@/lib/types";
-import { AppLayout } from "@/components/layout/app-layout";
 import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button";
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +42,7 @@ const toDate = (timestamp: any): Date => {
 
 
 export default function ClientDetailPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser()!;
   const router = useRouter();
   const params = useParams();
   const clientId = params.id as string;
@@ -52,10 +50,6 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-      return;
-    }
 
     async function fetchClient() {
       if (!user) return;
@@ -71,10 +65,10 @@ export default function ClientDetailPage() {
     if(user) {
       fetchClient();
     }
-  }, [user, userLoading, clientId, router]);
+  }, [user, clientId, router]);
 
-  if (userLoading || loading || !client || !user) {
-    return <AppLayout><div className="flex h-screen items-center justify-center">Carregando...</div></AppLayout>;
+  if (loading || !client || !user) {
+    return <div className="flex h-screen items-center justify-center">Carregando...</div>;
   }
 
   const formattedDate = toDate(client.createdAt).toLocaleDateString('pt-BR');
@@ -100,7 +94,6 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <AppLayout>
       <div className="space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center space-x-4">
@@ -221,6 +214,5 @@ export default function ClientDetailPage() {
           )}
         </div>
       </div>
-    </AppLayout>
   );
 }
