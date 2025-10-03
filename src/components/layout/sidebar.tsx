@@ -27,9 +27,8 @@ const CarIcon = (props: React.SVGProps<SVGSVGElement>) => (
         strokeLinecap="round"
         strokeLinejoin="round"
     >
-        <path d="M6.5 12.5L12 6L17.5 12.5" />
-        <path d="M12 6V18" />
-        <path d="M4 12.5H20" />
+       <path d="M5 12h14" />
+       <path d="M12 5l7 7-7 7" />
     </svg>
 );
 
@@ -47,7 +46,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
-            <CarIcon className="w-8 h-8 text-primary" />
+            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                <CarIcon className="w-6 h-6" />
+            </div>
             <h1 className="text-xl font-headline font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">AutoEstética</h1>
         </div>
       </SidebarHeader>

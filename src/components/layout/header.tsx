@@ -38,7 +38,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border/50 bg-card/50 px-4 backdrop-blur-md sm:h-16 sm:px-6">
         <SidebarTrigger className="md:hidden"/>
         <h1 className="hidden md:block text-lg font-headline font-semibold">{title}</h1>
         <div className="relative ml-auto flex-1 md:grow-0">

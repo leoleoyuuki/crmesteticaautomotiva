@@ -39,17 +39,17 @@ export function ServiceRecommendations({ client }: ServiceRecommendationsProps) 
   };
 
   return (
-    <Card className="bg-primary/5 border-primary/20">
+    <Card className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 border-purple-500/30">
       <CardHeader>
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle className="font-headline flex items-center gap-2">
-                    <Wand2 className="text-accent" />
+                    <Wand2 className="text-purple-400" />
                     Recomendações Inteligentes
                 </CardTitle>
                 <CardDescription>Sugestões de pacotes de serviços baseadas no histórico do cliente.</CardDescription>
             </div>
-            <Button onClick={handleFetchRecommendations} disabled={isLoading} variant="secondary" className="bg-primary/10 hover:bg-primary/20">
+            <Button onClick={handleFetchRecommendations} disabled={isLoading} variant="secondary">
                 {isLoading ? 'Gerando...' : 'Gerar Recomendações'}
             </Button>
         </div>
