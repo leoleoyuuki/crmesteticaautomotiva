@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { getClients } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PlusCircle, MoreHorizontal, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Client } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/app-layout';
 import { DeleteClientButton } from '@/components/clients/delete-client-button';
+import { useSearch } from '@/context/search-provider';
 
 // Helper to safely convert Firestore timestamp or string to a Date object
 const toDate = (timestamp: any): Date => {
@@ -37,6 +38,7 @@ export default function ClientsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const { searchTerm } = useSearch();
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -63,6 +65,13 @@ export default function ClientsPage() {
       fetchClients();
     }
   }, [user, userLoading, router]);
+
+  const filteredClients = useMemo(() => {
+    if (!searchTerm) return clients;
+    return clients.filter(client => 
+      client.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [clients, searchTerm]);
 
   if (userLoading || loading || !user) {
     return (
@@ -145,8 +154,8 @@ export default function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clients.length > 0 ? (
-                clients.map(client => (
+              {filteredClients.length > 0 ? (
+                filteredClients.map(client => (
                 <TableRow key={client.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -188,7 +197,7 @@ export default function ClientsPage() {
               ) : (
                   <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          Nenhum cliente encontrado.
+                          {searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}
                       </TableCell>
                   </TableRow>
               )}

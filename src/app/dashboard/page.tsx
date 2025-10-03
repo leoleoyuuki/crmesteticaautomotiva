@@ -14,6 +14,7 @@ import { getClients } from '@/lib/data';
 import { Client } from '@/lib/types';
 import { subMonths, isAfter, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSearch } from '@/context/search-provider';
 
 export type UpcomingExpiration = {
   clientId: string;
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const { searchTerm } = useSearch();
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -143,6 +145,20 @@ export default function DashboardPage() {
 
   }, [clients]);
 
+  const filteredExpirations = useMemo(() => {
+    if (!searchTerm) {
+      return upcomingExpirations;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return upcomingExpirations.filter(
+      (exp) =>
+        exp.clientName.toLowerCase().includes(lowercasedFilter) ||
+        exp.vehicleMake.toLowerCase().includes(lowercasedFilter) ||
+        exp.vehicleModel.toLowerCase().includes(lowercasedFilter) ||
+        exp.serviceType.toLowerCase().includes(lowercasedFilter)
+    );
+  }, [upcomingExpirations, searchTerm]);
+
   if (userLoading || loading || !user) {
     return (
       <AppLayout>
@@ -190,7 +206,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-        <UpcomingExpirations expirations={upcomingExpirations} />
+        <UpcomingExpirations expirations={filteredExpirations} />
       </div>
     </AppLayout>
   );

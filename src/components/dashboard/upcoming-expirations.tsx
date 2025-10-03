@@ -5,10 +5,12 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Bell, MessageCircle, User } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback } from "../ui/avatar";
 import { formatDistanceToNow, isWithinInterval, addMonths } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from "../ui/scroll-area";
+import { useMemo } from "react";
+import { useSearch } from "@/context/search-provider";
 
 
 type UpcomingExpiration = {
@@ -32,12 +34,27 @@ interface UpcomingExpirationsProps {
 export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
   const now = new Date();
   const oneMonthFromNow = addMonths(now, 1);
+  const { searchTerm } = useSearch();
 
   const getWhatsAppLink = (exp: UpcomingExpiration) => {
     const phone = `55${exp.clientPhone.replace(/\D/g, '')}`;
     const message = `Olá ${exp.clientName}, tudo bem? Notei que o serviço de ${exp.serviceType} para seu ${exp.vehicleMake} ${exp.vehicleModel} está prestes a vencer. Que tal renová-lo com 10% de desconto este mês?`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   }
+
+  const filteredExpirations = useMemo(() => {
+    if (!searchTerm) {
+      return expirations;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return expirations.filter(
+      (exp) =>
+        exp.clientName.toLowerCase().includes(lowercasedFilter) ||
+        exp.vehicleMake.toLowerCase().includes(lowercasedFilter) ||
+        exp.vehicleModel.toLowerCase().includes(lowercasedFilter) ||
+        exp.serviceType.toLowerCase().includes(lowercasedFilter)
+    );
+  }, [expirations, searchTerm]);
 
   return (
     <Card>
@@ -63,8 +80,8 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {expirations.length > 0 ? (
-                    expirations.map((exp) => {
+                {filteredExpirations.length > 0 ? (
+                    filteredExpirations.map((exp) => {
                         const expiryDate = new Date(exp.expirationDate);
                         const isExpiringSoon = isWithinInterval(expiryDate, { start: now, end: oneMonthFromNow });
 
@@ -73,9 +90,6 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-9 w-9">
-                                            {exp.clientAvatar ? (
-                                                <AvatarImage src={exp.clientAvatar} alt={exp.clientName} />
-                                            ) : null}
                                             <AvatarFallback className="bg-muted text-muted-foreground">
                                                 <User className="h-5 w-5" />
                                             </AvatarFallback>
@@ -112,7 +126,7 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                 ) : (
                     <TableRow>
                         <TableCell colSpan={5} className="text-center text-muted-foreground h-48">
-                            Nenhum vencimento próximo.
+                            {searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum vencimento próximo."}
                         </TableCell>
                     </TableRow>
                 )}

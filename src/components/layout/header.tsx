@@ -9,6 +9,8 @@ import { Search, LogOut } from "lucide-react";
 import { Input } from "../ui/input";
 import { useUser } from "@/firebase/auth/use-user";
 import { auth } from "@/firebase/firebase";
+import { useSearch } from "@/context/search-provider";
+import { useEffect, useState } from "react";
 
 const getTitle = (pathname: string) => {
   if (pathname.startsWith('/dashboard')) return 'Painel';
@@ -21,7 +23,26 @@ export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
+  const { searchTerm, setSearchTerm } = useSearch();
+  const [localSearch, setLocalSearch] = useState(searchTerm);
+
   const title = getTitle(pathname);
+  const showSearch = pathname.startsWith('/dashboard') || pathname.startsWith('/clients');
+
+  useEffect(() => {
+    // Reset search term when navigating away from searchable pages
+    if (!showSearch) {
+      setSearchTerm('');
+    }
+    setLocalSearch(searchTerm);
+  }, [pathname, showSearch, setSearchTerm, searchTerm]);
+
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalSearch(value);
+    setSearchTerm(value);
+  }
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -42,18 +63,24 @@ export function AppHeader() {
         <SidebarTrigger className="md:hidden"/>
         <h1 className="hidden md:block text-lg font-headline font-semibold">{title}</h1>
         <div className="relative ml-auto flex-1 md:grow-0">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Procurar..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-          />
+          {showSearch && (
+            <>
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Procurar..."
+                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+                value={localSearch}
+                onChange={handleSearchChange}
+              />
+            </>
+          )}
         </div>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-9 w-9">
-                        <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "Avatar"} data-ai-hint="person face" />
+                        <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "Avatar"} />
                         <AvatarFallback>{getInitials(user?.displayName || user?.email)}</AvatarFallback>
                     </Avatar>
                 </Button>
