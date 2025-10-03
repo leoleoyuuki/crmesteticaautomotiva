@@ -81,13 +81,14 @@ export default function LandingPage() {
               <div className="mt-16 w-full max-w-5xl" id="demo">
                 <div className="relative p-2 rounded-2xl bg-gradient-to-br from-purple-500/50 via-pink-500/50 to-blue-500/50">
                   <div className="rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm border border-white/20">
-                    <Image
-                      src="https://images.unsplash.com/photo-1616422285623-13ff0162193c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXIlMjBkZXRhaWxpbmd8ZW58MHx8fHwxNzU5NjgyNjM4fDA&ixlib=rb-4.1.0&q=80&w=1080"
-                      alt="Car Detailing"
-                      width={1200}
-                      height={600}
+                    <video
+                      src="/videos/video.mp4"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       className="w-full aspect-video object-cover"
-                    />
+                    ></video>
                   </div>
                 </div>
               </div>
