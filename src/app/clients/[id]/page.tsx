@@ -25,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { isPast, isWithinInterval, addMonths, formatDistanceToNow } from "date-fns";
 import { ptBR } from 'date-fns/locale';
-import { VehicleLogo } from "@/components/vehicles/vehicle-logo";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
@@ -168,52 +167,47 @@ export default function ClientDetailPage() {
                             </DropdownMenu>
                           </div>
                       </CardHeader>
-                      <CardContent className="grid md:grid-cols-3 gap-6">
-                          <div className="md:col-span-1">
-                              <VehicleLogo make={vehicle.make} />
-                          </div>
-                          <div className="md:col-span-2">
-                              <h4 className="font-semibold mb-2">Histórico de Serviços</h4>
-                              {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
-                              <Table>
-                                  <TableHeader>
-                                      <TableRow>
-                                          <TableHead>Serviço</TableHead>
-                                          <TableHead>Data</TableHead>
-                                          <TableHead>Vencimento</TableHead>
-                                          <TableHead className="text-right">Custo</TableHead>
-                                          <TableHead className="text-center">Ações</TableHead>
+                      <CardContent>
+                          <h4 className="font-semibold mb-2">Histórico de Serviços</h4>
+                          {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                      <TableHead>Serviço</TableHead>
+                                      <TableHead>Data</TableHead>
+                                      <TableHead>Vencimento</TableHead>
+                                      <TableHead className="text-right">Custo</TableHead>
+                                      <TableHead className="text-center">Ações</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {vehicle.serviceHistory.map(service => (
+                                      <TableRow key={service.id}>
+                                          <TableCell className="font-medium">{service.serviceType}</TableCell>
+                                          <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
+                                          <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                {getExpirationBadge(service.expirationDate)}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
+                                          <TableCell className="text-center flex items-center justify-center gap-1">
+                                              <Button variant="ghost" size="icon" asChild>
+                                                <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Link>
+                                              </Button>
+                                              <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
+                                          </TableCell>
                                       </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                      {vehicle.serviceHistory.map(service => (
-                                          <TableRow key={service.id}>
-                                              <TableCell className="font-medium">{service.serviceType}</TableCell>
-                                              <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
-                                              <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    {getExpirationBadge(service.expirationDate)}
-                                                </div>
-                                              </TableCell>
-                                              <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
-                                              <TableCell className="text-center flex items-center justify-center gap-1">
-                                                  <Button variant="ghost" size="icon" asChild>
-                                                    <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Link>
-                                                  </Button>
-                                                  <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
-                                              </TableCell>
-                                          </TableRow>
-                                      ))}
-                                  </TableBody>
-                              </Table>
-                              ) : (
-                                  <div className="text-center text-muted-foreground p-10 border rounded-md">
-                                      <p>Nenhum histórico de serviço para este veículo.</p>
-                                  </div>
-                              )}
-                          </div>
+                                  ))}
+                              </TableBody>
+                          </Table>
+                          ) : (
+                              <div className="text-center text-muted-foreground p-10 border rounded-md">
+                                  <p>Nenhum histórico de serviço para este veículo.</p>
+                              </div>
+                          )}
                       </CardContent>
                   </Card>
               ))}
