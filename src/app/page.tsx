@@ -397,7 +397,7 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full border-t border-white/10 bg-black/20 backdrop-blur-md">
+      <footer className="flex items-center justify-center z-10 w-full border-t border-white/10 bg-black/20 backdrop-blur-md">
         <div className="container flex flex-col sm:flex-row py-6 items-center justify-center px-4 md:px-6">
           <p className="text-sm text-gray-400">&copy; 2024 CRM AutoEstética. Todos os direitos reservados.</p>
         </div>
