@@ -4,8 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CheckCircle, Car, Users, BarChart, Sparkles, Zap, TrendingUp, Clock, Shield, Star, ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useUser } from "@/firebase/auth/use-user";
 
 export default function LandingPage() {
+  const { user } = useUser();
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
       {/* Animated background elements */}
@@ -55,8 +58,8 @@ export default function LandingPage() {
               
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Button asChild size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 px-8 py-6 text-lg shadow-lg shadow-purple-500/50 transition-all hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105">
-                  <Link href="/login">
-                    Comece grátis agora
+                  <Link href={user ? "/dashboard" : "/login"}>
+                    {user ? "Ir para o dashboard" : "Comece grátis agora"}
                   </Link>
                 </Button>
                 <Button asChild size="lg" className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 px-8 py-6 text-lg transition-all hover:scale-105">
