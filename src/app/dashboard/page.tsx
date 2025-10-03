@@ -19,7 +19,6 @@ import { useSearch } from '@/context/search-provider';
 export type UpcomingExpiration = {
   clientId: string;
   clientName: string;
-  clientAvatar: string;
   clientPhone: string;
   vehicleId: string;
   vehicleMake: string;
@@ -39,6 +38,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!userLoading && !user) {
       router.push('/login');
+      return;
     }
     
     async function fetchData() {
@@ -80,7 +80,6 @@ export default function DashboardPage() {
     }
 
     clients.forEach(client => {
-      // Ensure createdAt is a valid date string before parsing
       if(client.createdAt && typeof client.createdAt === 'string') {
         const clientCreatedAt = parseISO(client.createdAt);
         if (isAfter(clientCreatedAt, sixMonthsAgo)) {
@@ -112,7 +111,6 @@ export default function DashboardPage() {
               expirations.push({
                 clientId: client.id,
                 clientName: client.name,
-                clientAvatar: client.avatarUrl,
                 clientPhone: client.phone,
                 vehicleId: vehicle.id,
                 vehicleMake: vehicle.make,
