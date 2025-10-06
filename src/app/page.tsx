@@ -85,7 +85,7 @@ export default function LandingPage() {
                 <div className="relative p-2 rounded-2xl bg-gradient-to-br from-purple-500/50 via-pink-500/50 to-blue-500/50">
                   <div className="rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm border border-white/20">
                     <video
-                      src="/videos/video.mp4"
+                      src="/videos/video2.mp4"
                       autoPlay
                       loop
                       muted
