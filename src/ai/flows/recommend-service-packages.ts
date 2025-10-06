@@ -44,7 +44,10 @@ export type RecommendServicePackagesOutput = z.infer<
 export async function recommendServicePackages(
   input: RecommendServicePackagesInput
 ): Promise<RecommendServicePackagesOutput> {
-  return recommendServicePackagesFlow(input);
+  const {output} = await recommendServicePackagesFlow.generate({
+    input: input,
+  });
+  return output!;
 }
 
 const prompt = ai.definePrompt({
@@ -53,6 +56,8 @@ const prompt = ai.definePrompt({
   output: {schema: RecommendServicePackagesOutputSchema},
   prompt: `You are an expert auto detailing service advisor for a high-end shop.
   Your goal is to increase sales by suggesting relevant services to existing customers.
+  
+  **IMPORTANT: Your entire response must be in Brazilian Portuguese (pt-BR).**
 
   Analyze the client's service history and vehicle data to recommend ONE logical next service. This could be a complementary service to what they've had done, or an upgrade.
 
