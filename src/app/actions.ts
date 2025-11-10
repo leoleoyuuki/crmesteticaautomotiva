@@ -238,35 +238,37 @@ export async function getServiceRecommendations(input: RecommendServicePackagesI
 // Activation Code Actions
 export async function generateActivationCode(adminId: string, durationMonths: number): Promise<{ success: boolean; code?: string; error?: string }> {
     if (adminId !== 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2') {
-      return { success: false, error: 'Apenas administradores podem gerar códigos.' };
+        return { success: false, error: 'Apenas administradores podem gerar códigos.' };
     }
     if (!firestore) {
-      return { success: false, error: 'Firestore não inicializado.' };
+        return { success: false, error: 'Firestore não inicializado.' };
     }
-  
+
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     const codesCollection = collection(firestore, 'activationCodes');
     
     const newCodeData = {
-      code,
-      durationMonths,
-      createdAt: serverTimestamp(),
-      isUsed: false,
-      usedBy: null,
-      usedAt: null,
+        code,
+        durationMonths,
+        createdAt: serverTimestamp(),
+        isUsed: false,
+        usedBy: null,
+        usedAt: null,
     };
     
-    await addDoc(codesCollection, newCodeData).catch(serverError => {
+    try {
+        await addDoc(codesCollection, newCodeData);
+        revalidatePath('/admin/codes');
+        return { success: true, code };
+    } catch (serverError: any) {
         const permissionError = new FirestorePermissionError({
             path: codesCollection.path,
             operation: 'create',
             requestResourceData: newCodeData
         });
         errorEmitter.emit('permission-error', permissionError);
-    });
-
-    revalidatePath('/admin/codes');
-    return { success: true, code };
+        return { success: false, error: 'Falha ao gerar o código devido a um erro de permissão.' };
+    }
 }
   
 export async function redeemActivationCode(userId: string, code: string): Promise<{ success: boolean; error?: string }> {
