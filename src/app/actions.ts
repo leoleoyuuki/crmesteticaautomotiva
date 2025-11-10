@@ -263,8 +263,6 @@ export async function generateActivationCode(adminId: string, durationMonths: nu
             requestResourceData: newCodeData
         });
         errorEmitter.emit('permission-error', permissionError);
-        // This throw is important to stop execution and signal an error state
-        throw new Error("Permission denied"); 
     });
 
     revalidatePath('/admin/codes');
@@ -327,6 +325,8 @@ export async function redeemActivationCode(userId: string, code: string): Promis
         await batch.commit();
         revalidatePath('/dashboard');
         redirect('/dashboard');
+        // This return is for type safety, but redirect will stop execution.
+        return { success: true };
     } catch (error: any) {
         const permissionError = new FirestorePermissionError({
             path: `BATCH WRITE: [${codeDoc.ref.path}, ${userDocRef.path}]`,
@@ -337,4 +337,3 @@ export async function redeemActivationCode(userId: string, code: string): Promis
         return { success: false, error: 'Falha ao ativar a conta. Tente novamente.' };
     }
 }
-
