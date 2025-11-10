@@ -29,10 +29,12 @@ service cloud.firestore {
     }
 
     function isActivated(userId) {
-      // Allow access if the user's `isActivated` field is true.
-      // The `activatedUntil` check prevents access if the activation has expired.
-      return get(/databases/$(database)/documents/users/$(userId)).data.isActivated == true &&
-             get(/databases/$(database)/documents/users/$(userId)).data.activatedUntil > request.time;
+      // Admin is always considered activated.
+      // For others, check if the user's `isActivated` field is true and not expired.
+      return isAdmin() || (
+        get(/databases/$(database)/documents/users/$(userId)).data.isActivated == true &&
+        get(/databases/$(database)/documents/users/$(userId)).data.activatedUntil > request.time
+      );
     }
 
     /**

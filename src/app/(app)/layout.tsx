@@ -25,13 +25,20 @@ export default function AuthenticatedAppLayout({
             router.push('/login');
             return;
         }
+        
+        const isAdmin = user.uid === 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
+
+        // Admin tem acesso irrestrito
+        if (isAdmin) {
+            setIsReady(true);
+            return;
+        }
 
         async function checkAuthorization() {
             const userProfile = await getUserProfile(user!.uid);
 
             // Se o perfil não existe (pode acontecer logo após o cadastro), espere.
             if (!userProfile) {
-                // Se estiver na página de ativação, ok. Senão, vá para lá.
                  if (pathname !== '/activate') {
                     router.push('/activate');
                 } else {
@@ -40,16 +47,9 @@ export default function AuthenticatedAppLayout({
                 return;
             }
 
-            const isAdmin = user.uid === 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
             const isActivated = userProfile.isActivated && userProfile.activatedUntil && isAfter(new Date(userProfile.activatedUntil), new Date());
             
-            // Caso especial: Admin acessando páginas de admin
-            if (isAdmin && pathname.startsWith('/admin')) {
-                setIsReady(true);
-                return;
-            }
-
-            // Todos (incluindo admin em páginas não-admin) precisam de ativação
+            // Usuários não-admin precisam de ativação
             if (!isActivated) {
                 if (pathname !== '/activate') {
                     router.push('/activate');

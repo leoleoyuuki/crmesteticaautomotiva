@@ -7,12 +7,13 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageCircle } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { redeemActivationCode } from '@/app/actions';
 import { auth } from '@/firebase/firebase';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   code: z.string().min(6, { message: 'O código deve ter 6 caracteres.' }).max(6, { message: 'O código deve ter 6 caracteres.' }),
@@ -79,10 +80,22 @@ export default function ActivatePage() {
               Ativar Conta
             </Button>
           </form>
-           <Button variant="link" className="w-full" onClick={handleLogout}>
-            Sair
-          </Button>
         </CardContent>
+        <CardFooter className="flex-col gap-4">
+            <Separator />
+            <div className="text-center text-sm text-muted-foreground">
+                <p>Não possui um código de ativação?</p>
+                <Button variant="link" asChild className="text-primary">
+                    <a href="https://wa.me/11957211546" target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Solicitar um código
+                    </a>
+                </Button>
+            </div>
+           <Button variant="link" className="w-full text-muted-foreground" onClick={handleLogout}>
+            Sair da conta
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
