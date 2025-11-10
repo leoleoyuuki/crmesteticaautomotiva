@@ -255,20 +255,20 @@ export async function generateActivationCode(adminId: string, durationMonths: nu
       usedBy: null,
       usedAt: null,
     };
-  
-    try {
-      await addDoc(codesCollection, newCodeData);
-      revalidatePath('/admin/codes');
-      return { success: true, code };
-    } catch (serverError) {
+    
+    await addDoc(codesCollection, newCodeData).catch(serverError => {
         const permissionError = new FirestorePermissionError({
             path: codesCollection.path,
             operation: 'create',
             requestResourceData: newCodeData
         });
         errorEmitter.emit('permission-error', permissionError);
-        return { success: false, error: 'Falha ao gerar o código devido a um problema de permissão.' };
-    }
+        // This throw is important to stop execution and signal an error state
+        throw new Error("Permission denied"); 
+    });
+
+    revalidatePath('/admin/codes');
+    return { success: true, code };
 }
   
 export async function redeemActivationCode(userId: string, code: string): Promise<{ success: boolean; error?: string }> {
@@ -337,3 +337,4 @@ export async function redeemActivationCode(userId: string, code: string): Promis
         return { success: false, error: 'Falha ao ativar a conta. Tente novamente.' };
     }
 }
+
