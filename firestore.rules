@@ -1,125 +1,96 @@
 /**
  * @file Firestore Security Rules
- * @core-philosophy This ruleset enforces a strict user-ownership model, ensuring that only authenticated users can access their own data.
+ * @core-philosophy This ruleset enforces a strict user-ownership model and an activation system.
  * @data-structure
  *   - Data is organized hierarchically under `/users/{userId}`.
- *   - Clients, vehicles, and service records are nested under each user.
+ *   - Access to user-nested data requires the user account to be activated.
+ *   - Activation codes are stored in a root collection `/activationCodes`.
  * @key-security-decisions
- *   - User listing is disallowed to protect privacy.
- *   - Only authenticated users can create, read, update, or delete data under their own user ID.
- * @denormalization-for-authorization N/A - No denormalization is used in this ruleset.  The data model is strictly hierarchical, and authorization is based on path-based ownership.
- * @structural-segregation N/A - No structural segregation is used in this ruleset. All data is private and user-specific.
+ *   - Only a specific admin user can create and manage activation codes.
+ *   - Authenticated users can redeem an unused activation code.
+ *   - Activated users can perform CRUD operations on their own data (`clients`, `vehicles`, etc.).
+ *   - Unactivated users are denied access to all data except their own user profile and the activation code they are trying to read.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return request.auth.uid == 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
+    }
+
+    function isActivated(userId) {
+      // Allow access if the user's `isActivated` field is true.
+      // The `activatedUntil` check prevents access if the activation has expired.
+      return get(/databases/$(database)/documents/users/$(userId)).data.isActivated == true &&
+             get(/databases/$(database)/documents/users/$(userId)).data.activatedUntil > request.time;
+    }
 
     /**
      * @description Controls access to user profile information.
-     * @path /users/{userId}
-     * @allow (create) - Authenticated user can create their own profile.
-     * @allow (get, update, delete) - Authenticated user can access their own profile.
-     * @deny (create) - An unauthenticated user cannot create a profile.
-     * @deny (get, update, delete) - An authenticated user cannot access another user's profile.
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - Any signed-in user can create their own profile.
+     * @allow (get, update) - A user can read or update their own profile.
+     * @deny (list, delete) - Listing or deleting user profiles is disallowed.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
+      allow get, update: if isSignedIn() && isOwner(userId);
+      allow list, delete: if false;
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+    
+    /**
+     * @description Controls access to activation codes.
+     * @allow (create, list) - Only the admin can create and list codes.
+     * @allow (get) - Any authenticated user can read a single code (to check its status).
+     * @allow (update) - Only an authenticated user can redeem an unused code.
+     * @deny (delete) - Deleting codes is disallowed for safety.
+     */
+    match /activationCodes/{codeId} {
+      allow get: if isSignedIn();
+      allow list, create: if isAdmin();
+      // Allow update only if the code is being marked as used, is not already used,
+      // and the user is the one using it.
+      allow update: if isSignedIn() 
+                    && request.resource.data.isUsed == true
+                    && resource.data.isUsed == false
+                    && request.resource.data.usedBy == request.auth.uid;
+      allow delete: if false;
     }
 
     /**
      * @description Controls access to client information for a specific user.
-     * @path /users/{userId}/clients/{clientId}
-     * @allow (create) - Authenticated user can create a client under their ID.
-     * @allow (get, update, delete) - Authenticated user can access clients under their ID.
-     * @deny (create) - An unauthenticated user cannot create a client.
-     * @deny (get, update, delete) - An authenticated user cannot access clients under another user's ID.
-     * @principle Enforces document ownership for writes.
+     * @allow (all) - Only an activated user can perform CRUD on their own clients.
+     * @deny (all) - Unactivated users or users trying to access other's data are denied.
      */
     match /users/{userId}/clients/{clientId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow read, write: if isSignedIn() && isOwner(userId) && isActivated(userId);
     }
 
     /**
      * @description Controls access to vehicle information for a specific client.
-     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}
-     * @allow (create) - Authenticated user can create a vehicle under their client.
-     * @allow (get, update, delete) - Authenticated user can access vehicles under their client.
-     * @deny (create) - An unauthenticated user cannot create a vehicle.
-     * @deny (get, update, delete) - An authenticated user cannot access vehicles under another user's client.
-     * @principle Enforces document ownership for writes.
+     * @allow (all) - Only an activated user can perform CRUD on their own vehicles.
+     * @deny (all) - Unactivated users or users trying to access other's data are denied.
      */
     match /users/{userId}/clients/{clientId}/vehicles/{vehicleId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow read, write: if isSignedIn() && isOwner(userId) && isActivated(userId);
     }
 
     /**
      * @description Controls access to service history for a specific vehicle.
-     * @path /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId}
-     * @allow (create) - Authenticated user can create a service record under their vehicle.
-     * @allow (get, update, delete) - Authenticated user can access service records under their vehicle.
-     * @deny (create) - An unauthenticated user cannot create a service record.
-     * @deny (get, update, delete) - An authenticated user cannot access service records under another user's vehicle.
-     * @principle Enforces document ownership for writes.
+     * @allow (all) - Only an activated user can perform CRUD on their own service records.
+     * @deny (all) - Unactivated users or users trying to access other's data are denied.
      */
     match /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow read, write: if isSignedIn() && isOwner(userId) && isActivated(userId);
     }
   }
 }

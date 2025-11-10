@@ -17,9 +17,18 @@
                 "avatarUrl": {
                     "type": "string",
                     "description": "URL for the user's avatar image."
+                },
+                "isActivated": {
+                    "type": "boolean",
+                    "description": "Whether the user has activated their account with a code."
+                },
+                "activatedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date when the user's access expires."
                 }
             },
-            "required": ["name", "email"]
+            "required": ["name", "email", "isActivated"]
         },
         "client": {
             "title": "Client",
@@ -120,6 +129,40 @@
                 }
             },
             "required": ["serviceType", "date", "cost", "durationMonths", "expirationDate"]
+        },
+        "activationCode": {
+            "title": "Activation Code",
+            "description": "Represents a one-time code to activate a user account for a specific duration.",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "The unique activation code."
+                },
+                "durationMonths": {
+                    "type": "number",
+                    "description": "The duration of access in months (e.g., 3, 6, 12)."
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the code was created."
+                },
+                "isUsed": {
+                    "type": "boolean",
+                    "description": "Whether the code has been used."
+                },
+                "usedBy": {
+                    "type": "string",
+                    "description": "The UID of the user who used the code."
+                },
+                "usedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the code was used."
+                }
+            },
+            "required": ["code", "durationMonths", "createdAt", "isUsed"]
         }
     },
     "auth": {
@@ -131,6 +174,12 @@
                 "$ref": "#/entities/userProfile"
             },
             "description": "Stores user profile information."
+        },
+        "/activationCodes/{codeId}": {
+            "schema": {
+                "$ref": "#/entities/activationCode"
+            },
+            "description": "Stores account activation codes."
         },
         "/users/{userId}/clients/{clientId}": {
             "schema": {

@@ -1,7 +1,7 @@
 'use server';
 
 import { recommendServicePackages, RecommendServicePackagesInput } from '@/ai/flows/recommend-service-packages';
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { ClientFormData, ServiceRecord, ServiceRecordFormData, Vehicle, VehicleFormData } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
@@ -201,5 +201,82 @@ export async function getServiceRecommendations(input: RecommendServicePackagesI
     } catch (error) {
         console.error('Error in getServiceRecommendations:', error);
         return { success: false, error: "Falha ao obter recomendações. Verifique o console do servidor para mais detalhes." };
+    }
+}
+
+// Activation Code Actions
+export async function generateActivationCode(adminId: string, durationMonths: number): Promise<{ success: boolean; code?: string; error?: string }> {
+    if (adminId !== 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2') {
+      return { success: false, error: 'Apenas administradores podem gerar códigos.' };
+    }
+    if (!firestore) {
+      return { success: false, error: 'Firestore não inicializado.' };
+    }
+  
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const codesCollection = collection(firestore, 'activationCodes');
+  
+    try {
+      await addDoc(codesCollection, {
+        code,
+        durationMonths,
+        createdAt: serverTimestamp(),
+        isUsed: false,
+        usedBy: null,
+        usedAt: null,
+      });
+      revalidatePath('/admin/codes');
+      return { success: true, code };
+    } catch (error) {
+      console.error('Error generating code:', error);
+      return { success: false, error: 'Falha ao gerar o código.' };
+    }
+}
+  
+export async function redeemActivationCode(userId: string, code: string): Promise<{ success: boolean; error?: string }> {
+    if (!firestore) {
+        return { success: false, error: 'Firestore não inicializado.' };
+    }
+
+    const codesCollection = collection(firestore, 'activationCodes');
+    const q = query(codesCollection, where('code', '==', code));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return { success: false, error: 'Código de ativação inválido.' };
+    }
+
+    const codeDoc = querySnapshot.docs[0];
+    const codeData = codeDoc.data();
+
+    if (codeData.isUsed) {
+        return { success: false, error: 'Este código já foi utilizado.' };
+    }
+
+    const userDocRef = doc(firestore, 'users', userId);
+    const now = new Date();
+    const activatedUntil = addMonths(now, codeData.durationMonths);
+
+    const batch = writeBatch(firestore);
+
+    batch.update(codeDoc.ref, {
+        isUsed: true,
+        usedBy: userId,
+        usedAt: serverTimestamp(),
+    });
+
+    batch.update(userDocRef, {
+        isActivated: true,
+        activatedUntil: activatedUntil.toISOString(),
+    });
+
+    try {
+        await batch.commit();
+        revalidatePath('/dashboard');
+        redirect('/dashboard');
+    } catch (error) {
+        console.error('Error redeeming code:', error);
+        return { success: false, error: 'Falha ao ativar a conta. Tente novamente.' };
     }
 }

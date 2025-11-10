@@ -14,7 +14,9 @@ import {
   LayoutDashboard, 
   Users, 
   Settings,
+  KeyRound,
 } from "lucide-react";
+import { useUser } from "@/firebase/auth/use-user";
 
 const CarIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
@@ -35,12 +37,18 @@ const CarIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const isAdmin = user?.uid === 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
 
   const menuItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/clients", label: "Clientes", icon: Users },
     { href: "/settings", label: "Configurações", icon: Settings },
   ];
+
+  if (isAdmin) {
+    menuItems.push({ href: "/admin/codes", label: "Gerar Códigos", icon: KeyRound });
+  }
 
   return (
     <Sidebar>

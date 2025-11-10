@@ -1,0 +1,89 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
+import { useUser } from '@/firebase/auth/use-user';
+import { redeemActivationCode } from '@/app/actions';
+import { auth } from '@/firebase/firebase';
+
+const formSchema = z.object({
+  code: z.string().min(6, { message: 'O código deve ter 6 caracteres.' }).max(6, { message: 'O código deve ter 6 caracteres.' }),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+export default function ActivatePage() {
+  const { user } = useUser();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { code: '' },
+  });
+
+  const handleActivation = async ({ code }: FormData) => {
+    if (!user) {
+      setError('Você precisa estar logado para ativar sua conta.');
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await redeemActivationCode(user.uid, code.toUpperCase());
+      if (result && !result.success) {
+        setError(result.error || 'Ocorreu um erro desconhecido.');
+      }
+      // On success, the action redirects, so we don't need to do anything here.
+    });
+  };
+
+  const handleLogout = async () => {
+    await auth.signOut();
+  };
+
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-secondary">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-headline">Ativar sua Conta</CardTitle>
+          <CardDescription>Insira o código de ativação que você recebeu para começar a usar o sistema.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleActivation)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Código de Ativação</Label>
+              <Input
+                id="code"
+                placeholder="ABCDEF"
+                {...form.register('code')}
+                className="text-center text-lg tracking-widest uppercase"
+              />
+              {form.formState.errors.code && <p className="text-sm text-destructive">{form.formState.errors.code.message}</p>}
+            </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Ativar Conta
+            </Button>
+          </form>
+           <Button variant="link" className="w-full" onClick={handleLogout}>
+            Sair
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

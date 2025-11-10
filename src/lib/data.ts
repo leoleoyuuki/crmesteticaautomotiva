@@ -1,8 +1,8 @@
 'use client';
 
-import { collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, Timestamp, query, orderBy } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
-import type { Client, Vehicle, ServiceRecord } from './types';
+import type { Client, Vehicle, ServiceRecord, UserProfile, ActivationCode } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -23,6 +23,23 @@ const toISOString = (date: any): string => {
     // Return a valid ISO string for invalid or missing dates to avoid downstream errors
     return new Date(0).toISOString();
 };
+
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+    if (!firestore) return null;
+    const userDocRef = doc(firestore, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists()) {
+        return null;
+    }
+    const data = userDoc.data();
+    return {
+        id: userDoc.id,
+        name: data.name,
+        email: data.email,
+        isActivated: data.isActivated || false,
+        activatedUntil: data.activatedUntil ? toISOString(data.activatedUntil) : undefined,
+    };
+}
 
 
 export async function getClients(userId: string): Promise<Client[]> {
@@ -190,5 +207,24 @@ export async function getServiceRecordById(userId: string, clientId: string, veh
     } catch (serverError) {
         console.error("Error fetching service record:", serverError);
         return undefined;
+    }
+}
+
+export async function getActivationCodes(): Promise<ActivationCode[]> {
+    if (!firestore) return [];
+    const codesCollection = collection(firestore, 'activationCodes');
+    const q = query(codesCollection, orderBy('createdAt', 'desc'));
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: toISOString(doc.data().createdAt),
+        usedAt: doc.data().usedAt ? toISOString(doc.data().usedAt) : undefined,
+      } as ActivationCode));
+    } catch (error) {
+      console.error("Failed to fetch activation codes:", error);
+      // In a real app, you might want to handle permission errors specifically
+      return [];
     }
 }

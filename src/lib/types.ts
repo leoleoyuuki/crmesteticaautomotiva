@@ -47,3 +47,21 @@ export interface Notification {
   status: 'scheduled' | 'sent' | 'failed';
   channel: 'WhatsApp' | 'Email' | 'SMS';
 }
+
+export interface UserProfile {
+    id: string;
+    name: string;
+    email: string;
+    isActivated: boolean;
+    activatedUntil?: string;
+}
+
+export interface ActivationCode {
+    id: string;
+    code: string;
+    durationMonths: number;
+    createdAt: string;
+    isUsed: boolean;
+    usedBy?: string;
+    usedAt?: string;
+}

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { auth } from '@/firebase/firebase';
+import { auth, firestore } from '@/firebase/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,6 +49,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // The layout will now handle redirection based on activation status
       router.push('/dashboard');
     } catch (error: any) {
       setError(getFirebaseErrorMessage(error.code));
@@ -62,7 +64,18 @@ export default function LoginPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
-      router.push('/dashboard');
+      
+      // Create user profile in Firestore
+      const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+      await setDoc(userDocRef, {
+        name: name,
+        email: email,
+        isActivated: false,
+        activatedUntil: null,
+      });
+
+      // Redirect to activation page
+      router.push('/activate');
     } catch (error: any) {
         setError(getFirebaseErrorMessage(error.code));
     } finally {
