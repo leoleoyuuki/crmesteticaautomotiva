@@ -4,7 +4,6 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { SearchProvider } from "@/context/search-provider";
 import { useUser } from "@/firebase/auth/use-user";
 import { getUserProfile } from "@/lib/data";
-import { UserProfile } from "@/lib/types";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { isAfter } from 'date-fns';
@@ -17,12 +16,10 @@ export default function AuthenticatedAppLayout({
     const { user, loading } = useUser();
     const router = useRouter();
     const pathname = usePathname();
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [profileLoading, setProfileLoading] = useState(true);
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
-        if (loading) return;
+        if (loading) return; // Aguarde a verificação inicial do usuário
 
         if (!user) {
             router.push('/login');
@@ -31,60 +28,52 @@ export default function AuthenticatedAppLayout({
 
         async function checkAuthorization() {
             const userProfile = await getUserProfile(user!.uid);
-            setProfile(userProfile);
-            setProfileLoading(false);
 
+            // Se o perfil não existe (pode acontecer logo após o cadastro), espere.
             if (!userProfile) {
-                // This can happen briefly after signup. Let's wait.
-                // A better solution might be a dedicated loading/profile creation state.
+                // Se estiver na página de ativação, ok. Senão, vá para lá.
+                 if (pathname !== '/activate') {
+                    router.push('/activate');
+                } else {
+                    setIsReady(true);
+                }
                 return;
             }
 
             const isAdmin = user.uid === 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
             const isActivated = userProfile.isActivated && userProfile.activatedUntil && isAfter(new Date(userProfile.activatedUntil), new Date());
+            
+            // Caso especial: Admin acessando páginas de admin
+            if (isAdmin && pathname.startsWith('/admin')) {
+                setIsReady(true);
+                return;
+            }
 
-            // Non-admin users must be activated
-            if (!isAdmin && !isActivated) {
+            // Todos (incluindo admin em páginas não-admin) precisam de ativação
+            if (!isActivated) {
                 if (pathname !== '/activate') {
                     router.push('/activate');
                 } else {
-                    setIsAuthorized(true); // Allow rendering the activate page
+                    setIsReady(true); // Permite que a página de ativação seja renderizada
                 }
                 return;
             }
 
-            // Admin users can access admin pages without activation,
-            // but need activation for regular app pages.
-            if (isAdmin) {
-                if(pathname.startsWith('/admin')) {
-                    setIsAuthorized(true);
-                    return;
-                }
-                if (!isActivated) {
-                    if (pathname !== '/activate') {
-                        router.push('/activate');
-                    } else {
-                        setIsAuthorized(true); // Allow rendering the activate page
-                    }
-                    return;
-                }
-            }
-            
-            // If user is activated but on the activate page, redirect them away.
+            // Se usuário está ativo, mas na página de ativação, redirecione para o dashboard
             if (isActivated && pathname === '/activate') {
                 router.push('/dashboard');
                 return;
             }
             
-            // If we've reached here, the user is authorized to see the page.
-            setIsAuthorized(true);
+            // Se chegou até aqui, o usuário está autorizado a ver a página.
+            setIsReady(true);
         }
 
         checkAuthorization();
 
     }, [user, loading, router, pathname]);
 
-    if (loading || profileLoading || !isAuthorized) {
+    if (!isReady) {
         return <div className="flex h-screen items-center justify-center">Carregando...</div>;
     }
 
