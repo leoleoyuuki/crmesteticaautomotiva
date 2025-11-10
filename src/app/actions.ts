@@ -22,17 +22,14 @@ export async function addClient(userId: string, formData: ClientFormData) {
         createdAt: serverTimestamp(),
     };
 
-    try {
-        await addDoc(clientsCollection, newClientData);
-    } catch (serverError) {
+    addDoc(clientsCollection, newClientData).catch(serverError => {
         const permissionError = new FirestorePermissionError({
             path: clientsCollection.path,
             operation: 'create',
             requestResourceData: newClientData
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw permissionError;
-    }
+    });
     
     revalidatePath('/clients');
     redirect('/clients');
@@ -45,17 +42,14 @@ Error("User not authenticated");
 
     const clientDocRef = doc(firestore, 'users', userId, 'clients', clientId);
 
-    try {
-        await updateDoc(clientDocRef, formData as any);
-    } catch (serverError) {
+    updateDoc(clientDocRef, formData as any).catch(serverError => {
         const permissionError = new FirestorePermissionError({
             path: clientDocRef.path,
             operation: 'update',
             requestResourceData: formData
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw permissionError;
-    }
+    });
 
     revalidatePath(`/clients`);
     revalidatePath(`/clients/${clientId}`);
@@ -80,16 +74,13 @@ export async function deleteClient(userId: string, clientId: string) {
     }
     batch.delete(clientDocRef);
 
-    try {
-        await batch.commit();
-    } catch (serverError) {
+    batch.commit().catch(serverError => {
         const permissionError = new FirestorePermissionError({
             path: clientDocRef.path,
             operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw permissionError;
-    }
+    });
 
     revalidatePath('/clients');
     redirect('/clients');
@@ -101,7 +92,14 @@ export async function addVehicle(userId: string, clientId: string, formData: Veh
     if (!userId) throw new Error("User not authenticated");
 
     const vehiclesCollection = collection(firestore, 'users', userId, 'clients', clientId, 'vehicles');
-    await addDoc(vehiclesCollection, formData);
+    addDoc(vehiclesCollection, formData).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: vehiclesCollection.path,
+            operation: 'create',
+            requestResourceData: formData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -112,7 +110,14 @@ export async function updateVehicle(userId: string, clientId: string, vehicleId:
     if (!userId) throw new Error("User not authenticated");
 
     const vehicleDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId);
-    await updateDoc(vehicleDocRef, formData as any);
+    updateDoc(vehicleDocRef, formData as any).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: vehicleDocRef.path,
+            operation: 'update',
+            requestResourceData: formData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -131,7 +136,13 @@ export async function deleteVehicle(userId: string, clientId: string, vehicleId:
     serviceHistorySnapshot.forEach(doc => batch.delete(doc.ref));
     batch.delete(vehicleDocRef);
     
-    await batch.commit();
+    batch.commit().catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: vehicleDocRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -154,7 +165,14 @@ export async function addServiceRecord(userId: string, clientId: string, vehicle
         expirationDate: expirationDate.toISOString()
     };
     
-    await addDoc(serviceHistoryCollection, newServiceData);
+    addDoc(serviceHistoryCollection, newServiceData).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: serviceHistoryCollection.path,
+            operation: 'create',
+            requestResourceData: newServiceData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -175,7 +193,14 @@ export async function updateServiceRecord(userId: string, clientId: string, vehi
         expirationDate: expirationDate.toISOString()
     };
     
-    await updateDoc(serviceDocRef, updatedServiceData as any);
+    updateDoc(serviceDocRef, updatedServiceData as any).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: serviceDocRef.path,
+            operation: 'update',
+            requestResourceData: updatedServiceData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -186,7 +211,13 @@ export async function deleteServiceRecord(userId: string, clientId: string, vehi
     if (!userId) throw new Error("User not authenticated");
 
     const serviceDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
-    await deleteDoc(serviceDocRef);
+    deleteDoc(serviceDocRef).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: serviceDocRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -215,21 +246,28 @@ export async function generateActivationCode(adminId: string, durationMonths: nu
   
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     const codesCollection = collection(firestore, 'activationCodes');
+    
+    const newCodeData = {
+      code,
+      durationMonths,
+      createdAt: serverTimestamp(),
+      isUsed: false,
+      usedBy: null,
+      usedAt: null,
+    };
   
     try {
-      await addDoc(codesCollection, {
-        code,
-        durationMonths,
-        createdAt: serverTimestamp(),
-        isUsed: false,
-        usedBy: null,
-        usedAt: null,
-      });
+      await addDoc(codesCollection, newCodeData);
       revalidatePath('/admin/codes');
       return { success: true, code };
-    } catch (error) {
-      console.error('Error generating code:', error);
-      return { success: false, error: 'Falha ao gerar o código.' };
+    } catch (serverError) {
+        const permissionError = new FirestorePermissionError({
+            path: codesCollection.path,
+            operation: 'create',
+            requestResourceData: newCodeData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        return { success: false, error: 'Falha ao gerar o código devido a um problema de permissão.' };
     }
 }
   
@@ -241,7 +279,19 @@ export async function redeemActivationCode(userId: string, code: string): Promis
     const codesCollection = collection(firestore, 'activationCodes');
     const q = query(codesCollection, where('code', '==', code));
 
-    const querySnapshot = await getDocs(q);
+    let querySnapshot;
+    try {
+        querySnapshot = await getDocs(q);
+    } catch (serverError: any) {
+        if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: codesCollection.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
+        return { success: false, error: 'Falha ao verificar o código devido a permissões.' };
+    }
 
     if (querySnapshot.empty) {
         return { success: false, error: 'Código de ativação inválido.' };
@@ -260,23 +310,30 @@ export async function redeemActivationCode(userId: string, code: string): Promis
 
     const batch = writeBatch(firestore);
 
-    batch.update(codeDoc.ref, {
+    const codeUpdateData = {
         isUsed: true,
         usedBy: userId,
         usedAt: serverTimestamp(),
-    });
+    };
+    batch.update(codeDoc.ref, codeUpdateData);
 
-    batch.update(userDocRef, {
+    const userUpdateData = {
         isActivated: true,
         activatedUntil: activatedUntil.toISOString(),
-    });
+    };
+    batch.update(userDocRef, userUpdateData);
 
     try {
         await batch.commit();
         revalidatePath('/dashboard');
         redirect('/dashboard');
-    } catch (error) {
-        console.error('Error redeeming code:', error);
+    } catch (error: any) {
+        const permissionError = new FirestorePermissionError({
+            path: `BATCH WRITE: [${codeDoc.ref.path}, ${userDocRef.path}]`,
+            operation: 'write',
+            requestResourceData: { codeUpdate: codeUpdateData, userUpdate: userUpdateData }
+        });
+        errorEmitter.emit('permission-error', permissionError);
         return { success: false, error: 'Falha ao ativar a conta. Tente novamente.' };
     }
 }

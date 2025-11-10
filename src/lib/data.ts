@@ -27,18 +27,32 @@ const toISOString = (date: any): string => {
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
     if (!firestore) return null;
     const userDocRef = doc(firestore, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    if (!userDoc.exists()) {
+    
+    try {
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            return null;
+        }
+        const data = userDoc.data();
+        return {
+            id: userDoc.id,
+            name: data.name,
+            email: data.email,
+            isActivated: data.isActivated || false,
+            activatedUntil: data.activatedUntil ? toISOString(data.activatedUntil) : undefined,
+        };
+    } catch(serverError: any) {
+        if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            console.error("An unexpected error occurred in getUserProfile:", serverError);
+        }
         return null;
     }
-    const data = userDoc.data();
-    return {
-        id: userDoc.id,
-        name: data.name,
-        email: data.email,
-        isActivated: data.isActivated || false,
-        activatedUntil: data.activatedUntil ? toISOString(data.activatedUntil) : undefined,
-    };
 }
 
 
@@ -180,8 +194,16 @@ export async function getVehicleById(userId: string, clientId: string, vehicleId
             return { id: vehicleDoc.id, ...vehicleDoc.data() } as Vehicle;
         }
         return undefined;
-    } catch (serverError) {
-        console.error("Error fetching vehicle:", serverError);
+    } catch (serverError: any) {
+        if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: vehicleDocRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            console.error("An unexpected error occurred:", serverError);
+        }
         return undefined;
     }
 }
@@ -204,8 +226,16 @@ export async function getServiceRecordById(userId: string, clientId: string, veh
             } as ServiceRecord;
         }
         return undefined;
-    } catch (serverError) {
-        console.error("Error fetching service record:", serverError);
+    } catch (serverError: any) {
+        if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: serviceDocRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            console.error("An unexpected error occurred:", serverError);
+        }
         return undefined;
     }
 }
@@ -222,9 +252,16 @@ export async function getActivationCodes(): Promise<ActivationCode[]> {
         createdAt: toISOString(doc.data().createdAt),
         usedAt: doc.data().usedAt ? toISOString(doc.data().usedAt) : undefined,
       } as ActivationCode));
-    } catch (error) {
-      console.error("Failed to fetch activation codes:", error);
-      // In a real app, you might want to handle permission errors specifically
-      return [];
+    } catch (serverError: any) {
+        if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: codesCollection.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            console.error("An unexpected error occurred:", serverError);
+        }
+        return [];
     }
 }
