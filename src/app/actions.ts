@@ -237,7 +237,7 @@ export async function getServiceRecommendations(input: RecommendServicePackagesI
 
 // Activation Code Actions
 export async function generateActivationCode(adminId: string, durationMonths: number): Promise<{ success: boolean; code?: string; error?: string }> {
-    if (adminId !== 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2') {
+    if (adminId != 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2') {
         return { success: false, error: 'Apenas administradores podem gerar códigos.' };
     }
     if (!firestore) {
