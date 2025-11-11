@@ -13,7 +13,7 @@ import { Loader2, MessageCircle } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { auth, firestore } from '@/firebase/firebase';
 import { Separator } from '@/components/ui/separator';
-import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { addMonths } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -121,7 +121,16 @@ function ActivatePageContent() {
             )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {!isExpired ? (
+          {isExpired ? (
+            <div className="text-center">
+               <Button asChild className="w-full">
+                  <a href="https://wa.me/11957211546?text=Ol%C3%A1%2C%20minha%20ativa%C3%A7%C3%A3o%20expirou%20e%20gostaria%20de%20adquirir%20um%20novo%20c%C3%B3digo." target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Solicitar Novo Código
+                  </a>
+              </Button>
+            </div>
+          ) : (
             <form onSubmit={form.handleSubmit(handleActivation)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="code">Código de Ativação</Label>
@@ -143,15 +152,6 @@ function ActivatePageContent() {
                 Ativar Conta
               </Button>
             </form>
-          ) : (
-            <div className="text-center">
-               <Button asChild className="w-full">
-                  <a href="https://wa.me/11957211546?text=Ol%C3%A1%2C%20minha%20ativa%C3%A7%C3%A3o%20expirou%20e%20gostaria%20de%20adquirir%20um%20novo%20c%C3%B3digo." target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Solicitar Novo Código
-                  </a>
-              </Button>
-            </div>
           )}
         </CardContent>
         <CardFooter className="flex-col gap-4">
