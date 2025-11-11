@@ -11,6 +11,7 @@ import { useUser } from "@/firebase/auth/use-user";
 import { auth } from "@/firebase/firebase";
 import { useSearch } from "@/context/search-provider";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const getTitle = (pathname: string) => {
   if (pathname.startsWith('/dashboard')) return 'Painel';
@@ -30,7 +31,7 @@ export function AppHeader() {
   const [localSearch, setLocalSearch] = useState(searchTerm);
 
   const title = getTitle(pathname);
-  const showSearch = pathname.startsWith('/dashboard') || pathname.startsWith('/clients') || pathname.startsWith('/vehicles') || pathname.startsWith('/services');
+  const showSearch = pathname.startsWith('/dashboard') || pathname.startsWith('/clients') || pathname.startsWith('/vehicles') || pathname.startsWith('/services') || pathname.startsWith('/renewals');
 
   useEffect(() => {
     // Reset search term when navigating away from searchable pages
@@ -91,7 +92,9 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{user?.displayName || user?.email || 'Minha Conta'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Configurações</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/settings">Configurações</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem>Suporte</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
