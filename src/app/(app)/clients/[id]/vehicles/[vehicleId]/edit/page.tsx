@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
 import { getVehicleById } from '@/lib/data';
-import { updateVehicle } from '@/app/actions';
 import { Vehicle, VehicleFormData } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { VehicleForm } from '@/components/vehicles/vehicle-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc, updateDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function EditVehiclePage() {
   const { user } = useUser()!;
@@ -19,10 +21,13 @@ export default function EditVehiclePage() {
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchVehicle() {
       if (!user) return;
+      setLoading(true);
       const vehicleData = await getVehicleById(user.uid, clientId, vehicleId);
       if (!vehicleData) {
         notFound();
@@ -39,7 +44,27 @@ export default function EditVehiclePage() {
 
   const handleUpdateVehicle = async (data: VehicleFormData) => {
     if (!user || !vehicle) return;
-    await updateVehicle(user.uid, clientId, vehicle.id, data);
+    
+    const vehicleDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId);
+    
+    startTransition(async () => {
+      try {
+        await updateDoc(vehicleDocRef, data as any);
+        toast({
+            title: "Veículo atualizado!",
+            description: "Os dados do veículo foram salvos."
+        });
+        router.push(`/clients/${clientId}`);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to update vehicle:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao atualizar",
+            description: "Não foi possível atualizar o veículo."
+        });
+      }
+    });
   };
 
   if (loading || !vehicle) {
@@ -71,6 +96,7 @@ export default function EditVehiclePage() {
           <VehicleForm 
             vehicle={vehicle}
             onSave={handleUpdateVehicle}
+            isPending={isPending}
             savingText="Atualizando..."
             cancelHref={`/clients/${clientId}`}
           />

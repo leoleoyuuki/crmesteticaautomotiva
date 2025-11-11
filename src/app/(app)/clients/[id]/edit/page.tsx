@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
 import { getClientById } from '@/lib/data';
-import { updateClient } from '@/app/actions';
 import { Client, ClientFormData } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ClientForm } from '@/components/clients/client-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc, updateDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function EditClientPage() {
   const { user } = useUser()!;
@@ -18,10 +20,13 @@ export default function EditClientPage() {
   
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchClient() {
       if (!user) return;
+      setLoading(true);
       const clientData = await getClientById(user.uid, clientId);
       if (!clientData) {
         notFound();
@@ -38,7 +43,27 @@ export default function EditClientPage() {
 
   const handleUpdateClient = async (data: ClientFormData) => {
     if (!user || !client) return;
-    await updateClient(user.uid, client.id, data);
+    
+    const clientDocRef = doc(firestore, 'users', user.uid, 'clients', clientId);
+
+    startTransition(async () => {
+      try {
+        await updateDoc(clientDocRef, data as any);
+        toast({
+          title: 'Cliente atualizado!',
+          description: `${data.name} foi atualizado com sucesso.`,
+        });
+        router.push(`/clients/${clientId}`);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to update client:", error);
+        toast({
+          variant: "destructive",
+          title: 'Erro ao atualizar',
+          description: 'Não foi possível atualizar o cliente.',
+        });
+      }
+    });
   };
 
   if (loading || !client) {
@@ -80,6 +105,7 @@ export default function EditClientPage() {
           <ClientForm 
             client={client}
             onSave={handleUpdateClient}
+            isPending={isPending}
             savingText="Atualizando..."
           />
         </CardContent>

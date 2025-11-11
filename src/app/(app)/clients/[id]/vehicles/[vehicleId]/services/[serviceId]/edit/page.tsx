@@ -1,14 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
 import { getServiceRecordById } from '@/lib/data';
-import { updateServiceRecord } from '@/app/actions';
 import { ServiceRecord, ServiceRecordFormData } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ServiceForm } from '@/components/services/service-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc, updateDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { addMonths } from 'date-fns';
 
 export default function EditServicePage() {
   const { user } = useUser()!;
@@ -20,10 +23,13 @@ export default function EditServicePage() {
 
   const [service, setService] = useState<ServiceRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchService() {
       if (!user) return;
+      setLoading(true);
       const serviceData = await getServiceRecordById(user.uid, clientId, vehicleId, serviceId);
       if (!serviceData) {
         notFound();
@@ -40,7 +46,36 @@ export default function EditServicePage() {
 
   const handleUpdateService = async (data: ServiceRecordFormData) => {
     if (!user || !service) return;
-    await updateServiceRecord(user.uid, clientId, vehicleId, service.id, data);
+
+    const serviceDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
+    
+    startTransition(async () => {
+      try {
+        const startDate = new Date(data.date);
+        const expirationDate = addMonths(startDate, data.durationMonths);
+
+        const updatedServiceData = {
+            ...data,
+            date: startDate.toISOString(),
+            expirationDate: expirationDate.toISOString()
+        };
+        
+        await updateDoc(serviceDocRef, updatedServiceData as any);
+        toast({
+          title: "Serviço atualizado!",
+          description: "O registro de serviço foi salvo."
+        });
+        router.push(`/clients/${clientId}`);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to update service record:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao atualizar",
+          description: "Não foi possível atualizar o serviço."
+        });
+      }
+    });
   };
 
   if (loading || !service) {
@@ -73,6 +108,7 @@ export default function EditServicePage() {
           <ServiceForm 
             service={service}
             onSave={handleUpdateService}
+            isPending={isPending}
             savingText="Atualizando..."
             cancelHref={`/clients/${clientId}`}
           />

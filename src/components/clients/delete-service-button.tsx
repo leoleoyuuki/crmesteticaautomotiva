@@ -13,8 +13,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteServiceRecord } from '@/app/actions';
 import { Loader2, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface DeleteServiceButtonProps {
   userId: string;
@@ -25,10 +28,27 @@ interface DeleteServiceButtonProps {
 
 export function DeleteServiceButton({ userId, clientId, vehicleId, serviceId }: DeleteServiceButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleDelete = () => {
     startTransition(async () => {
-      await deleteServiceRecord(userId, clientId, vehicleId, serviceId);
+      const serviceDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
+      try {
+        await deleteDoc(serviceDocRef);
+        toast({
+          title: "Serviço excluído",
+          description: "O registro de serviço foi removido."
+        });
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete service record:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao excluir",
+          description: "Não foi possível remover o serviço."
+        });
+      }
     });
   };
 

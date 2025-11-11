@@ -14,7 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useTransition } from 'react';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { ServiceRecord, ServiceRecordFormData } from '@/lib/types';
@@ -44,10 +43,10 @@ interface ServiceFormProps {
   onSave: (data: ServiceRecordFormData) => Promise<any>;
   savingText?: string;
   cancelHref: string;
+  isPending: boolean;
 }
 
-export function ServiceForm({ service, onSave, savingText = 'Salvando...', cancelHref }: ServiceFormProps) {
-  const [isPending, startTransition] = useTransition();
+export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando...', cancelHref }: ServiceFormProps) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,9 +60,7 @@ export function ServiceForm({ service, onSave, savingText = 'Salvando...', cance
   });
 
   async function onSubmit(values: FormValues) {
-    startTransition(async () => {
       await onSave(toServiceRecordFormData(values));
-    });
   }
 
   return (

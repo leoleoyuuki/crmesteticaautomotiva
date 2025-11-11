@@ -14,8 +14,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { deleteClient } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { deleteDoc, doc, getDocs, collection, writeBatch } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface DeleteClientButtonProps {
   userId: string;
@@ -25,11 +28,47 @@ interface DeleteClientButtonProps {
 export function DeleteClientButton({ userId, clientId }: DeleteClientButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleDelete = () => {
     startTransition(async () => {
-      await deleteClient(userId, clientId);
-      setIsOpen(false);
+      if (!firestore) {
+        toast({ variant: "destructive", title: "Erro", description: "Ocorreu um erro de conexão." });
+        return;
+      }
+      
+      const clientDocRef = doc(firestore, 'users', userId, 'clients', clientId);
+      const batch = writeBatch(firestore);
+
+      try {
+        const vehiclesCollection = collection(clientDocRef, 'vehicles');
+        const vehiclesSnapshot = await getDocs(vehiclesCollection);
+        for (const vehicleDoc of vehiclesSnapshot.docs) {
+            const serviceHistoryCollection = collection(vehicleDoc.ref, 'serviceHistory');
+            const serviceHistorySnapshot = await getDocs(serviceHistoryCollection);
+            serviceHistorySnapshot.forEach(serviceDoc => batch.delete(serviceDoc.ref));
+            batch.delete(vehicleDoc.ref);
+        }
+        batch.delete(clientDocRef);
+
+        await batch.commit();
+
+        toast({
+          title: "Cliente excluído!",
+          description: "O cliente e todos os seus dados foram removidos.",
+        });
+        setIsOpen(false);
+        router.push('/clients');
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete client:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir o cliente.",
+        });
+      }
     });
   };
 

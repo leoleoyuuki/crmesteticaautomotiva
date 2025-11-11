@@ -4,10 +4,13 @@ import { useRouter, notFound, useParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ServiceForm } from '@/components/services/service-form';
-import { addServiceRecord } from '@/app/actions';
 import { ServiceRecordFormData } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { getClientById, getVehicleById } from '@/lib/data';
+import { addDoc, collection } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { addMonths } from 'date-fns';
 
 export default function NewServicePage() {
   const { user } = useUser()!;
@@ -19,10 +22,13 @@ export default function NewServicePage() {
   const [clientName, setClientName] = useState('');
   const [vehicleName, setVehicleName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchData() {
         if(!user) return;
+        setLoading(true);
         const client = await getClientById(user.uid, clientId);
         const vehicle = await getVehicleById(user.uid, clientId, vehicleId);
         
@@ -44,7 +50,36 @@ export default function NewServicePage() {
 
   const handleAddService = async (data: ServiceRecordFormData) => {
     if (!user) return;
-    await addServiceRecord(user.uid, clientId, vehicleId, data);
+    
+    const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
+
+    startTransition(async () => {
+      try {
+        const startDate = new Date(data.date);
+        const expirationDate = addMonths(startDate, data.durationMonths);
+
+        const newServiceData = {
+            ...data,
+            date: startDate.toISOString(),
+            expirationDate: expirationDate.toISOString()
+        };
+    
+        await addDoc(serviceHistoryCollection, newServiceData);
+        toast({
+          title: "Serviço adicionado!",
+          description: "Um novo serviço foi registrado com sucesso."
+        });
+        router.push(`/clients/${clientId}`);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to add service record:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao adicionar",
+          description: "Não foi possível adicionar o novo serviço."
+        });
+      }
+    });
   };
   
   if(loading) {
@@ -62,6 +97,7 @@ export default function NewServicePage() {
         <CardContent>
           <ServiceForm 
             onSave={handleAddService}
+            isPending={isPending}
             savingText="Adicionando..."
             cancelHref={`/clients/${clientId}`}
           />

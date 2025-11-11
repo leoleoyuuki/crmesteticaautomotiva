@@ -14,8 +14,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { deleteVehicle } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { deleteDoc, doc, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface DeleteVehicleButtonProps {
   userId: string;
@@ -26,10 +29,35 @@ interface DeleteVehicleButtonProps {
 
 export function DeleteVehicleButton({ userId, clientId, vehicleId, onSelect }: DeleteVehicleButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleDelete = () => {
     startTransition(async () => {
-      await deleteVehicle(userId, clientId, vehicleId);
+      const vehicleDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId);
+      const batch = writeBatch(firestore);
+
+      try {
+        const serviceHistoryCollection = collection(vehicleDocRef, 'serviceHistory');
+        const serviceHistorySnapshot = await getDocs(serviceHistoryCollection);
+        serviceHistorySnapshot.forEach(doc => batch.delete(doc.ref));
+        batch.delete(vehicleDocRef);
+        
+        await batch.commit();
+
+        toast({
+          title: "Veículo excluído",
+          description: "O veículo e seu histórico foram removidos.",
+        });
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete vehicle:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao excluir",
+          description: "Não foi possível remover o veículo.",
+        });
+      }
     });
   };
 

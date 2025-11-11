@@ -13,7 +13,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { VehicleFormData } from '@/lib/types';
@@ -30,10 +29,10 @@ interface VehicleFormProps {
   onSave: (data: VehicleFormData) => Promise<any>;
   savingText?: string;
   cancelHref: string;
+  isPending: boolean;
 }
 
-export function VehicleForm({ vehicle, onSave, savingText = 'Salvando...', cancelHref }: VehicleFormProps) {
-  const [isPending, startTransition] = useTransition();
+export function VehicleForm({ vehicle, onSave, isPending, savingText = 'Salvando...', cancelHref }: VehicleFormProps) {
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(formSchema),
@@ -46,9 +45,7 @@ export function VehicleForm({ vehicle, onSave, savingText = 'Salvando...', cance
   });
 
   async function onSubmit(values: VehicleFormData) {
-    startTransition(async () => {
-      await onSave(values);
-    });
+    await onSave(values);
   }
 
   return (

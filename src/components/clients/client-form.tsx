@@ -13,9 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ClientFormData } from '@/lib/types';
 
@@ -35,11 +33,10 @@ interface ClientFormProps {
   client?: ClientFormData;
   onSave: (data: ClientFormData) => Promise<any>;
   savingText?: string;
+  isPending: boolean;
 }
 
-export function ClientForm({ client, onSave, savingText = 'Salvando...' }: ClientFormProps) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+export function ClientForm({ client, onSave, isPending, savingText = 'Salvando...' }: ClientFormProps) {
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(formSchema),
@@ -51,9 +48,7 @@ export function ClientForm({ client, onSave, savingText = 'Salvando...' }: Clien
   });
 
   async function onSubmit(values: ClientFormData) {
-    startTransition(async () => {
       await onSave(values);
-    });
   }
 
   return (
