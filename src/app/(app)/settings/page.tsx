@@ -123,7 +123,7 @@ export default function SettingsPage() {
                     <TabsContent value="profile" className="mt-6">
                       <Card className="border-none shadow-none">
                         <CardHeader>
-                          <CardTitle>Perfil Público</CardTitle>
+                          <CardTitle>Nome do Perfil</CardTitle>
                           <CardDescription>Atualize seu nome de exibição.</CardDescription>
                         </CardHeader>
                         <CardContent>
