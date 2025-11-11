@@ -16,6 +16,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { VehicleFormData } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   make: z.string().min(2, { message: 'A marca deve ter pelo menos 2 caracteres.' }),
@@ -30,10 +31,11 @@ interface VehicleFormProps {
   savingText?: string;
   cancelHref: string;
   isPending: boolean;
+  onCancel?: () => void;
 }
 
-export function VehicleForm({ vehicle, onSave, isPending, savingText = 'Salvando...', cancelHref }: VehicleFormProps) {
-
+export function VehicleForm({ vehicle, onSave, isPending, savingText = 'Salvando...', cancelHref, onCancel }: VehicleFormProps) {
+  const router = useRouter();
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: vehicle || {
@@ -46,6 +48,15 @@ export function VehicleForm({ vehicle, onSave, isPending, savingText = 'Salvando
 
   async function onSubmit(values: VehicleFormData) {
     await onSave(values);
+    form.reset();
+  }
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.push(cancelHref);
+    }
   }
 
   return (
@@ -108,8 +119,8 @@ export function VehicleForm({ vehicle, onSave, isPending, savingText = 'Salvando
             />
         </div>
         <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" asChild>
-                <Link href={cancelHref}>Cancelar</Link>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

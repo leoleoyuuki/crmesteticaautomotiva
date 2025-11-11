@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { PlusCircle } from 'lucide-react';
 
 type AggregatedVehicle = Vehicle & {
   clientName: string;
@@ -66,8 +67,15 @@ export default function VehiclesPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Veículos</CardTitle>
-                <CardDescription>Visualize todos os veículos de seus clientes em um só lugar.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle className="font-headline">Veículos</CardTitle>
+                        <CardDescription>Visualize todos os veículos de seus clientes em um só lugar.</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/vehicles/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Novo Veículo</Link>
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -98,8 +106,15 @@ export default function VehiclesPage() {
   return (
     <Card>
         <CardHeader>
-            <CardTitle className="font-headline">Veículos</CardTitle>
-            <CardDescription>Visualize todos os veículos de seus clientes em um só lugar.</CardDescription>
+            <div className="flex justify-between items-center">
+                <div>
+                    <CardTitle className="font-headline">Veículos</CardTitle>
+                    <CardDescription>Visualize todos os veículos de seus clientes em um só lugar.</CardDescription>
+                </div>
+                 <Button asChild>
+                    <Link href="/vehicles/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Novo Veículo</Link>
+                </Button>
+            </div>
         </CardHeader>
         <CardContent>
         <Table>

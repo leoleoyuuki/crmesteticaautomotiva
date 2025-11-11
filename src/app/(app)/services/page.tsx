@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 type AggregatedService = ServiceRecord & {
   clientName: string;
@@ -90,8 +91,15 @@ export default function ServicesPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Serviços Prestados</CardTitle>
-                <CardDescription>Visualize todos os serviços realizados em todos os veículos.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle className="font-headline">Serviços Prestados</CardTitle>
+                        <CardDescription>Visualize todos os serviços realizados em todos os veículos.</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/services/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Novo Serviço</Link>
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -124,8 +132,15 @@ export default function ServicesPage() {
   return (
     <Card>
         <CardHeader>
-            <CardTitle className="font-headline">Serviços Prestados</CardTitle>
-            <CardDescription>Visualize todos os serviços realizados em todos os veículos.</CardDescription>
+             <div className="flex justify-between items-center">
+                <div>
+                    <CardTitle className="font-headline">Serviços Prestados</CardTitle>
+                    <CardDescription>Visualize todos os serviços realizados em todos os veículos.</CardDescription>
+                </div>
+                <Button asChild>
+                    <Link href="/services/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Novo Serviço</Link>
+                </Button>
+            </div>
         </CardHeader>
         <CardContent>
         <Table>

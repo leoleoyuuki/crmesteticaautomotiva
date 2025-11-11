@@ -16,6 +16,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { ClientFormData } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -34,10 +35,11 @@ interface ClientFormProps {
   onSave: (data: ClientFormData) => Promise<any>;
   savingText?: string;
   isPending: boolean;
+  onCancel?: () => void;
 }
 
-export function ClientForm({ client, onSave, isPending, savingText = 'Salvando...' }: ClientFormProps) {
-
+export function ClientForm({ client, onSave, isPending, savingText = 'Salvando...', onCancel }: ClientFormProps) {
+  const router = useRouter();
   const form = useForm<ClientFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,6 +51,15 @@ export function ClientForm({ client, onSave, isPending, savingText = 'Salvando..
 
   async function onSubmit(values: ClientFormData) {
       await onSave(values);
+      form.reset();
+  }
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.back();
+    }
   }
 
   return (
@@ -94,8 +105,8 @@ export function ClientForm({ client, onSave, isPending, savingText = 'Salvando..
           )}
         />
         <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" asChild>
-                <Link href="/clients">Cancelar</Link>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
