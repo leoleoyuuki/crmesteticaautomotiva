@@ -32,13 +32,10 @@ const CarIcon = (props: React.SVGProps<SVGSVGElement>) => (
         strokeLinecap="round"
         strokeLinejoin="round"
     >
-      <path d="M14 16.33a1 1 0 0 0 1.5.87l2.17-1.25a1 1 0 0 0 0-1.74l-2.17-1.25a1 1 0 0 0-1.5.87V16.33z" />
-      <path d="M19.14 5.26a1 1 0 0 0-1.28.5L16.14 9.5a1 1 0 0 0 .5 1.28l2.72 1.57a1 1 0 0 0 1.28-.5l1.72-3.76a1 1 0 0 0-.5-1.28z" />
-      <path d="M5 18H3.6a.6.6 0 0 1-.6-.6v-3.8a.6.6 0 0 1 .6-.6h1.8" />
-      <path d="m2 12 1.4-1.4" />
-      <path d="M12 18h-5a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h7.65a3 3 0 0 1 2.85 2.1L19 12" />
-      <path d="M9.5 12H16" />
-      <path d="M18 18h-6" />
+        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9L2 12v9c0 .6.4 1 1 1h2" />
+        <circle cx="7" cy="17" r="2" />
+        <path d="M9 17h6" />
+        <circle cx="17" cy="17" r="2" />
     </svg>
 );
 
@@ -64,8 +61,8 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+        <div className="flex items-center gap-2 p-2 group/logo">
+            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-transparent border text-foreground/80 group-hover/logo:text-white group-hover/logo:bg-gradient-to-br from-purple-500 to-blue-500 transition-all duration-300">
                 <CarIcon className="w-6 h-6" />
             </div>
             <h1 className="text-xl font-headline font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">AutoEstética</h1>
