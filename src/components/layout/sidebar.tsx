@@ -32,8 +32,13 @@ const CarIcon = (props: React.SVGProps<SVGSVGElement>) => (
         strokeLinecap="round"
         strokeLinejoin="round"
     >
-       <path d="M5 12h14" />
-       <path d="M12 5l7 7-7 7" />
+      <path d="M14 16.33a1 1 0 0 0 1.5.87l2.17-1.25a1 1 0 0 0 0-1.74l-2.17-1.25a1 1 0 0 0-1.5.87V16.33z" />
+      <path d="M19.14 5.26a1 1 0 0 0-1.28.5L16.14 9.5a1 1 0 0 0 .5 1.28l2.72 1.57a1 1 0 0 0 1.28-.5l1.72-3.76a1 1 0 0 0-.5-1.28z" />
+      <path d="M5 18H3.6a.6.6 0 0 1-.6-.6v-3.8a.6.6 0 0 1 .6-.6h1.8" />
+      <path d="m2 12 1.4-1.4" />
+      <path d="M12 18h-5a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h7.65a3 3 0 0 1 2.85 2.1L19 12" />
+      <path d="M9.5 12H16" />
+      <path d="M18 18h-6" />
     </svg>
 );
 
