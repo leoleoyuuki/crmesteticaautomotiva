@@ -73,29 +73,26 @@ service cloud.firestore {
 
     /**
      * @description Controls access to client information for a specific user.
-     * @allow (all) - Only an activated user can perform CRUD on their own clients.
-     * @deny (all) - Unactivated users or users trying to access other's data are denied.
+     * @allow (all) - Only an authenticated user can perform CRUD on their own clients.
      */
     match /users/{userId}/clients/{clientId} {
-      allow read, write: if isSignedIn() && isOwner(userId) && isActivated(userId);
+      allow read, write: if isSignedIn() && isOwner(userId);
     }
 
     /**
      * @description Controls access to vehicle information for a specific client.
-     * @allow (all) - Only an activated user can perform CRUD on their own vehicles.
-     * @deny (all) - Unactivated users or users trying to access other's data are denied.
+     * @allow (all) - Only an authenticated user can perform CRUD on their own vehicles.
      */
     match /users/{userId}/clients/{clientId}/vehicles/{vehicleId} {
-      allow read, write: if isSignedIn() && isOwner(userId) && isActivated(userId);
+      allow read, write: if isSignedIn() && isOwner(userId);
     }
 
     /**
      * @description Controls access to service history for a specific vehicle.
-     * @allow (all) - Only an activated user can perform CRUD on their own service records.
-     * @deny (all) - Unactivated users or users trying to access other's data are denied.
+     * @allow (all) - Only an authenticated user can perform CRUD on their own service records.
      */
     match /users/{userId}/clients/{clientId}/vehicles/{vehicleId}/serviceHistory/{serviceId} {
-      allow read, write: if isSignedIn() && isOwner(userId) && isActivated(userId);
+      allow read, write: if isSignedIn() && isOwner(userId);
     }
   }
 }
