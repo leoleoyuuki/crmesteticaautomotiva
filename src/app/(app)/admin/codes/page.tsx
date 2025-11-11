@@ -17,8 +17,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
 
 export default function AdminCodesPage() {
   const { user, loading } = useUser();
@@ -64,27 +62,15 @@ export default function AdminCodesPage() {
           usedAt: null,
       };
 
-      try {
-        await addDoc(codesCollection, newCodeData);
-        toast({
-          title: "Código Gerado!",
-          description: `O código ${code} foi criado com sucesso.`,
-        });
-        const newCodes = await getActivationCodes();
-        setCodes(newCodes);
-      } catch (serverError: any) {
-        const permissionError = new FirestorePermissionError({
-            path: codesCollection.path,
-            operation: 'create',
-            requestResourceData: newCodeData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        toast({
-          title: "Erro de Permissão",
-          description: "Você não tem permissão para gerar códigos.",
-          variant: "destructive",
-        });
-      }
+      await addDoc(codesCollection, newCodeData);
+      
+      toast({
+        title: "Código Gerado!",
+        description: `O código ${code} foi criado com sucesso.`,
+      });
+      
+      const newCodes = await getActivationCodes();
+      setCodes(newCodes);
     });
   };
   

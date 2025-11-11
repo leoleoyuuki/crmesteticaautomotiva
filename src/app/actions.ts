@@ -6,8 +6,6 @@ import { firestore } from '@/firebase/firebase';
 import { ClientFormData, ServiceRecord, ServiceRecordFormData, Vehicle, VehicleFormData } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { addMonths } from 'date-fns';
 
 // Client Actions
@@ -22,14 +20,7 @@ export async function addClient(userId: string, formData: ClientFormData) {
         createdAt: serverTimestamp(),
     };
 
-    addDoc(clientsCollection, newClientData).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: clientsCollection.path,
-            operation: 'create',
-            requestResourceData: newClientData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await addDoc(clientsCollection, newClientData);
     
     revalidatePath('/clients');
     redirect('/clients');
@@ -37,19 +28,11 @@ export async function addClient(userId: string, formData: ClientFormData) {
 
 export async function updateClient(userId: string, clientId: string, formData: ClientFormData) {
     if (!firestore) throw new Error("Firestore not initialized");
-    if (!userId) throw new
-Error("User not authenticated");
+    if (!userId) throw new Error("User not authenticated");
 
     const clientDocRef = doc(firestore, 'users', userId, 'clients', clientId);
 
-    updateDoc(clientDocRef, formData as any).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: clientDocRef.path,
-            operation: 'update',
-            requestResourceData: formData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await updateDoc(clientDocRef, formData as any);
 
     revalidatePath(`/clients`);
     revalidatePath(`/clients/${clientId}`);
@@ -74,13 +57,7 @@ export async function deleteClient(userId: string, clientId: string) {
     }
     batch.delete(clientDocRef);
 
-    batch.commit().catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: clientDocRef.path,
-            operation: 'delete',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await batch.commit();
 
     revalidatePath('/clients');
     redirect('/clients');
@@ -92,14 +69,7 @@ export async function addVehicle(userId: string, clientId: string, formData: Veh
     if (!userId) throw new Error("User not authenticated");
 
     const vehiclesCollection = collection(firestore, 'users', userId, 'clients', clientId, 'vehicles');
-    addDoc(vehiclesCollection, formData).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: vehiclesCollection.path,
-            operation: 'create',
-            requestResourceData: formData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await addDoc(vehiclesCollection, formData);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -110,14 +80,7 @@ export async function updateVehicle(userId: string, clientId: string, vehicleId:
     if (!userId) throw new Error("User not authenticated");
 
     const vehicleDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId);
-    updateDoc(vehicleDocRef, formData as any).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: vehicleDocRef.path,
-            operation: 'update',
-            requestResourceData: formData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await updateDoc(vehicleDocRef, formData as any);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -136,13 +99,7 @@ export async function deleteVehicle(userId: string, clientId: string, vehicleId:
     serviceHistorySnapshot.forEach(doc => batch.delete(doc.ref));
     batch.delete(vehicleDocRef);
     
-    batch.commit().catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: vehicleDocRef.path,
-            operation: 'delete',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await batch.commit();
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -165,14 +122,7 @@ export async function addServiceRecord(userId: string, clientId: string, vehicle
         expirationDate: expirationDate.toISOString()
     };
     
-    addDoc(serviceHistoryCollection, newServiceData).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: serviceHistoryCollection.path,
-            operation: 'create',
-            requestResourceData: newServiceData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await addDoc(serviceHistoryCollection, newServiceData);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -193,14 +143,7 @@ export async function updateServiceRecord(userId: string, clientId: string, vehi
         expirationDate: expirationDate.toISOString()
     };
     
-    updateDoc(serviceDocRef, updatedServiceData as any).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: serviceDocRef.path,
-            operation: 'update',
-            requestResourceData: updatedServiceData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await updateDoc(serviceDocRef, updatedServiceData as any);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
@@ -211,13 +154,7 @@ export async function deleteServiceRecord(userId: string, clientId: string, vehi
     if (!userId) throw new Error("User not authenticated");
 
     const serviceDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
-    deleteDoc(serviceDocRef).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: serviceDocRef.path,
-            operation: 'delete',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    await deleteDoc(serviceDocRef);
 
     revalidatePath(`/clients/${clientId}`);
     redirect(`/clients/${clientId}`);
