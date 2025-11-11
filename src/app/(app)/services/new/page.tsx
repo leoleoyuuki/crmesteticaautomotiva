@@ -54,9 +54,11 @@ export default function NewServicePage() {
   const form = useForm<ServiceFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      serviceType: '',
       date: new Date(),
       durationMonths: 6,
       cost: 0,
+      notes: '',
     }
   });
 

@@ -44,7 +44,10 @@ export default function NewVehiclePage() {
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      make: '',
+      model: '',
       year: new Date().getFullYear(),
+      licensePlate: '',
     }
   });
 
