@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,8 +15,7 @@ import { auth, firestore } from '@/firebase/firebase';
 import { Separator } from '@/components/ui/separator';
 import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { addMonths } from 'date-fns';
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const formSchema = z.object({
   code: z.string().min(6, { message: 'O código deve ter 6 caracteres.' }).max(6, { message: 'O código deve ter 6 caracteres.' }),
@@ -24,9 +23,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function ActivatePage() {
+function ActivatePageContent() {
   const { user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isExpired = searchParams.get('expired') === 'true';
+
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -81,14 +83,13 @@ export default function ActivatePage() {
 
         batch.update(userDocRef, {
           isActivated: true,
-          activatedUntil: activatedUntil.toISOString(),
+          activatedUntil: activatedUntil,
         });
 
         await batch.commit();
 
-        // On success, redirect to dashboard
         router.push('/dashboard');
-        router.refresh(); // Forces a refresh of server components
+        router.refresh(); 
 
       } catch (e: any) {
         console.error("Activation Error: ", e);
@@ -107,43 +108,65 @@ export default function ActivatePage() {
     <div className="flex items-center justify-center min-h-screen bg-secondary">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-headline">Ativar sua Conta</CardTitle>
-          <CardDescription>Insira o código de ativação que você recebeu para começar a usar o sistema.</CardDescription>
+            {isExpired ? (
+              <>
+                <CardTitle className="text-3xl font-headline">Sua Ativação Expirou</CardTitle>
+                <CardDescription>Para continuar usando todos os recursos, por favor, adquira um novo código de ativação.</CardDescription>
+              </>
+            ) : (
+              <>
+                <CardTitle className="text-3xl font-headline">Ativar sua Conta</CardTitle>
+                <CardDescription>Insira o código de ativação que você recebeu para começar a usar o sistema.</CardDescription>
+              </>
+            )}
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={form.handleSubmit(handleActivation)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="code">Código de Ativação</Label>
-              <Input
-                id="code"
-                placeholder="ABCDEF"
-                {...form.register('code')}
-                className="text-center text-lg tracking-widest uppercase"
-              />
-              {form.formState.errors.code && <p className="text-sm text-destructive">{form.formState.errors.code.message}</p>}
+          {!isExpired ? (
+            <form onSubmit={form.handleSubmit(handleActivation)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="code">Código de Ativação</Label>
+                <Input
+                  id="code"
+                  placeholder="ABCDEF"
+                  {...form.register('code')}
+                  className="text-center text-lg tracking-widest uppercase"
+                />
+                {form.formState.errors.code && <p className="text-sm text-destructive">{form.formState.errors.code.message}</p>}
+              </div>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Ativar Conta
+              </Button>
+            </form>
+          ) : (
+            <div className="text-center">
+               <Button asChild className="w-full">
+                  <a href="https://wa.me/11957211546?text=Ol%C3%A1%2C%20minha%20ativa%C3%A7%C3%A3o%20expirou%20e%20gostaria%20de%20adquirir%20um%20novo%20c%C3%B3digo." target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Solicitar Novo Código
+                  </a>
+              </Button>
             </div>
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Ativar Conta
-            </Button>
-          </form>
+          )}
         </CardContent>
         <CardFooter className="flex-col gap-4">
             <Separator />
-            <div className="text-center text-sm text-muted-foreground">
-                <p>Não possui um código de ativação?</p>
-                <Button variant="link" asChild className="text-primary">
-                    <a href="https://wa.me/11957211546" target="_blank" rel="noopener noreferrer">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Solicitar um código
-                    </a>
-                </Button>
-            </div>
+            {!isExpired && (
+                 <div className="text-center text-sm text-muted-foreground">
+                    <p>Não possui um código de ativação?</p>
+                    <Button variant="link" asChild className="text-primary">
+                        <a href="https://wa.me/11957211546" target="_blank" rel="noopener noreferrer">
+                            <MessageCircle className="mr-2 h-4 w-4" />
+                            Solicitar um código
+                        </a>
+                    </Button>
+                </div>
+            )}
            <Button variant="link" className="w-full text-muted-foreground" onClick={handleLogout}>
             Sair da conta
           </Button>
@@ -151,4 +174,12 @@ export default function ActivatePage() {
       </Card>
     </div>
   );
+}
+
+export default function ActivatePage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Carregando...</div>}>
+      <ActivatePageContent />
+    </Suspense>
+  )
 }

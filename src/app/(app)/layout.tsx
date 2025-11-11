@@ -38,7 +38,7 @@ export default function AuthenticatedAppLayout({
             const userProfile = await getUserProfile(user!.uid);
 
             // Se o perfil não existe (pode acontecer logo após o cadastro), espere.
-            if (!userProfile) {
+            if (!userProfile || !userProfile.isActivated) {
                  if (pathname !== '/activate') {
                     router.push('/activate');
                 } else {
@@ -47,20 +47,22 @@ export default function AuthenticatedAppLayout({
                 return;
             }
 
-            const isActivated = userProfile.isActivated && userProfile.activatedUntil && isAfter(new Date(userProfile.activatedUntil), new Date());
+            // Perfil existe e já foi ativado uma vez.
+            const isStillActive = userProfile.activatedUntil && isAfter(new Date(userProfile.activatedUntil), new Date());
             
-            // Usuários não-admin precisam de ativação
-            if (!isActivated) {
+            // Usuário está com a ativação expirada.
+            if (!isStillActive) {
                 if (pathname !== '/activate') {
-                    router.push('/activate');
+                    // Redireciona para a página de ativação com um marcador de expiração
+                    router.push('/activate?expired=true');
                 } else {
-                    setIsReady(true); // Permite que a página de ativação seja renderizada
+                    setIsReady(true); // Permite que a página de ativação seja renderizada com o parâmetro
                 }
                 return;
             }
 
-            // Se usuário está ativo, mas na página de ativação, redirecione para o dashboard
-            if (isActivated && pathname === '/activate') {
+            // Se usuário está ativo e na página de ativação, redirecione para o dashboard
+            if (isStillActive && pathname === '/activate') {
                 router.push('/dashboard');
                 return;
             }
