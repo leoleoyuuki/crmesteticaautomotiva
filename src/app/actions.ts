@@ -235,71 +235,15 @@ export async function getServiceRecommendations(input: RecommendServicePackagesI
     }
 }
   
+/**
+ * This function is now deprecated for client-side use.
+ * The logic has been moved to the /activate page component
+ * to ensure the user's auth context is passed to Firestore.
+ */
 export async function redeemActivationCode(userId: string, code: string): Promise<{ success: boolean; error?: string }> {
-    if (!firestore) {
-        return { success: false, error: 'Firestore não inicializado.' };
-    }
-
-    const codesCollection = collection(firestore, 'activationCodes');
-    const q = query(codesCollection, where('code', '==', code));
-
-    let querySnapshot;
-    try {
-        querySnapshot = await getDocs(q);
-    } catch (serverError: any) {
-        if (serverError.code === 'permission-denied') {
-            const permissionError = new FirestorePermissionError({
-                path: codesCollection.path,
-                operation: 'list',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        }
-        return { success: false, error: 'Falha ao verificar o código devido a permissões.' };
-    }
-
-    if (querySnapshot.empty) {
-        return { success: false, error: 'Código de ativação inválido.' };
-    }
-
-    const codeDoc = querySnapshot.docs[0];
-    const codeData = codeDoc.data();
-
-    if (codeData.isUsed) {
-        return { success: false, error: 'Este código já foi utilizado.' };
-    }
-
-    const userDocRef = doc(firestore, 'users', userId);
-    const now = new Date();
-    const activatedUntil = addMonths(now, codeData.durationMonths);
-
-    const batch = writeBatch(firestore);
-
-    const codeUpdateData = {
-        isUsed: true,
-        usedBy: userId,
-        usedAt: serverTimestamp(),
-    };
-    batch.update(codeDoc.ref, codeUpdateData);
-
-    const userUpdateData = {
-        isActivated: true,
-        activatedUntil: activatedUntil.toISOString(),
-    };
-    batch.update(userDocRef, userUpdateData);
-
-    try {
-        await batch.commit();
-        revalidatePath('/dashboard');
-        redirect('/dashboard');
-        // This return is for type safety, but redirect will stop execution.
-        return { success: true };
-    } catch (error: any) {
-        const permissionError = new FirestorePermissionError({
-            path: `BATCH WRITE: [${codeDoc.ref.path}, ${userDocRef.path}]`,
-            operation: 'write',
-            requestResourceData: { codeUpdate: codeUpdateData, userUpdate: userUpdateData }
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        return { success: false, error: 'Falha ao ativar a conta. Tente novamente.' };
+    console.warn("redeemActivationCode is being called from a server action and is deprecated.");
+    return {
+        success: false,
+        error: "This function has been moved to the client."
     }
 }

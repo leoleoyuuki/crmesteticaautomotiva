@@ -11,9 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, MessageCircle } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
-import { redeemActivationCode } from '@/app/actions';
-import { auth } from '@/firebase/firebase';
+import { auth, firestore } from '@/firebase/firebase';
 import { Separator } from '@/components/ui/separator';
+import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { addMonths } from 'date-fns';
+import { useRouter } from 'next/navigation';
+
 
 const formSchema = z.object({
   code: z.string().min(6, { message: 'O código deve ter 6 caracteres.' }).max(6, { message: 'O código deve ter 6 caracteres.' }),
@@ -23,6 +26,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function ActivatePage() {
   const { user } = useUser();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -37,17 +41,65 @@ export default function ActivatePage() {
       return;
     }
     setError(null);
+
     startTransition(async () => {
-      const result = await redeemActivationCode(user.uid, code.toUpperCase());
-      if (result && !result.success) {
-        setError(result.error || 'Ocorreu um erro desconhecido.');
+      if (!firestore) {
+        setError('Firestore não inicializado.');
+        return;
       }
-      // On success, the action redirects, so we don't need to do anything here.
+      
+      const codesCollection = collection(firestore, 'activationCodes');
+      const q = query(codesCollection, where('code', '==', code.toUpperCase()));
+
+      try {
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          setError('Código de ativação inválido.');
+          return;
+        }
+
+        const codeDoc = querySnapshot.docs[0];
+        const codeData = codeDoc.data();
+
+        if (codeData.isUsed) {
+          setError('Este código já foi utilizado.');
+          return;
+        }
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const now = new Date();
+        const activatedUntil = addMonths(now, codeData.durationMonths);
+
+        const batch = writeBatch(firestore);
+
+        batch.update(codeDoc.ref, {
+          isUsed: true,
+          usedBy: user.uid,
+          usedAt: serverTimestamp(),
+        });
+
+        batch.update(userDocRef, {
+          isActivated: true,
+          activatedUntil: activatedUntil.toISOString(),
+        });
+
+        await batch.commit();
+
+        // On success, redirect to dashboard
+        router.push('/dashboard');
+        router.refresh(); // Forces a refresh of server components
+
+      } catch (e: any) {
+        console.error("Activation Error: ", e);
+        setError(e.message || 'Falha ao ativar a conta. Verifique o console para mais detalhes.');
+      }
     });
   };
 
   const handleLogout = async () => {
     await auth.signOut();
+    router.push('/login');
   };
 
 
