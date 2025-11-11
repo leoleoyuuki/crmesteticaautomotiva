@@ -172,21 +172,21 @@ export default function DashboardPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4">
+             <CardHeader>
+              <CardTitle className="font-headline">Receita Mensal</CardTitle>
+              <CardDescription>Receita gerada nos últimos 6 meses.</CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <RevenueChart data={monthlyRevenueData} />
+            </CardContent>
+          </Card>
+          <Card className="col-span-4 lg:col-span-3">
             <CardHeader>
               <CardTitle className="font-headline">Crescimento de Clientes</CardTitle>
               <CardDescription>Novos clientes nos últimos 6 meses.</CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
               <ClientGrowthChart data={clientGrowthData} />
-            </CardContent>
-          </Card>
-          <Card className="col-span-4 lg:col-span-3">
-            <CardHeader>
-              <CardTitle className="font-headline">Receita Mensal</CardTitle>
-              <CardDescription>Receita gerada nos últimos 6 meses.</CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <RevenueChart data={monthlyRevenueData} />
             </CardContent>
           </Card>
         </div>
