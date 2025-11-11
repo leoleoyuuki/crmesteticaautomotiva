@@ -234,39 +234,6 @@ export async function getServiceRecommendations(input: RecommendServicePackagesI
         return { success: false, error: "Falha ao obter recomendações. Verifique o console do servidor para mais detalhes." };
     }
 }
-
-// Activation Code Actions
-export async function generateActivationCode(adminId: string, durationMonths: number): Promise<{ success: boolean; code?: string; error?: string }> {
-    if (!firestore) {
-        return { success: false, error: 'Firestore não inicializado.' };
-    }
-
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const codesCollection = collection(firestore, 'activationCodes');
-    
-    const newCodeData = {
-        code,
-        durationMonths,
-        createdAt: serverTimestamp(),
-        isUsed: false,
-        usedBy: null,
-        usedAt: null,
-    };
-    
-    try {
-        await addDoc(codesCollection, newCodeData);
-        revalidatePath('/admin/codes');
-        return { success: true, code };
-    } catch (serverError: any) {
-        const permissionError = new FirestorePermissionError({
-            path: codesCollection.path,
-            operation: 'create',
-            requestResourceData: newCodeData
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        return { success: false, error: 'Falha ao gerar o código devido a um erro de permissão.' };
-    }
-}
   
 export async function redeemActivationCode(userId: string, code: string): Promise<{ success: boolean; error?: string }> {
     if (!firestore) {

@@ -5,7 +5,6 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { generateActivationCode } from '@/app/actions';
 import { getActivationCodes } from '@/lib/data';
 import { ActivationCode } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -16,6 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { firestore } from '@/firebase/firebase';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 export default function AdminCodesPage() {
   const { user, loading } = useUser();
@@ -36,27 +39,49 @@ export default function AdminCodesPage() {
   // Fetch codes
   useEffect(() => {
     async function fetchCodes() {
+      if (!user || user.uid !== 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2') return;
       const fetchedCodes = await getActivationCodes();
       setCodes(fetchedCodes);
     }
-    fetchCodes();
-  }, []);
+    if (user) {
+      fetchCodes();
+    }
+  }, [user]);
 
-  const handleGenerateCode = () => {
+  const handleGenerateCode = async () => {
     if (!user) return;
+    
     startGenerating(async () => {
-      const result = await generateActivationCode(user.uid, duration);
-      if (result.success) {
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const codesCollection = collection(firestore, 'activationCodes');
+      
+      const newCodeData = {
+          code,
+          durationMonths: duration,
+          createdAt: serverTimestamp(),
+          isUsed: false,
+          usedBy: null,
+          usedAt: null,
+      };
+
+      try {
+        await addDoc(codesCollection, newCodeData);
         toast({
           title: "Código Gerado!",
-          description: `O código ${result.code} foi criado com sucesso.`,
+          description: `O código ${code} foi criado com sucesso.`,
         });
         const newCodes = await getActivationCodes();
         setCodes(newCodes);
-      } else {
+      } catch (serverError: any) {
+        const permissionError = new FirestorePermissionError({
+            path: codesCollection.path,
+            operation: 'create',
+            requestResourceData: newCodeData
+        });
+        errorEmitter.emit('permission-error', permissionError);
         toast({
-          title: "Erro",
-          description: result.error,
+          title: "Erro de Permissão",
+          description: "Você não tem permissão para gerar códigos.",
           variant: "destructive",
         });
       }
