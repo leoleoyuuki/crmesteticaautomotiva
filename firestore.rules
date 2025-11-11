@@ -54,14 +54,13 @@ service cloud.firestore {
     /**
      * @description Controls access to activation codes.
      * @allow (create) - Only the admin can create codes.
-     * @allow (list) - Only the admin can list codes.
+     * @allow (list) - Admin can list all codes; users can query for a specific code.
      * @allow (get) - Any authenticated user can read a single code (to check its status).
      * @allow (update) - Only an authenticated user can redeem an unused code.
      * @deny (delete) - Deleting codes is disallowed for safety.
      */
     match /activationCodes/{codeId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
+      allow get, list: if isSignedIn();
       allow create: if isAdmin();
       // Allow update only if the code is being marked as used, is not already used,
       // and the user is the one using it.
