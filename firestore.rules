@@ -25,6 +25,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
+      // Admin user has a hardcoded UID for special permissions.
       return request.auth.uid == 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
     }
 
@@ -32,6 +33,7 @@ service cloud.firestore {
       // Admin is always considered activated.
       // For others, check if the user's `isActivated` field is true and not expired.
       return isAdmin() || (
+        exists(/databases/$(database)/documents/users/$(userId)) &&
         get(/databases/$(database)/documents/users/$(userId)).data.isActivated == true &&
         get(/databases/$(database)/documents/users/$(userId)).data.activatedUntil > request.time
       );
@@ -46,7 +48,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get, update: if isSignedIn() && isOwner(userId);
       allow list, delete: if false;
-      allow create: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.name == request.auth.token.name;
     }
     
     /**
