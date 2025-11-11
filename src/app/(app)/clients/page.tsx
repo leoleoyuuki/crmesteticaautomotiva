@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { DeleteClientButton } from '@/components/clients/delete-client-button';
 import { useSearch } from '@/context/search-provider';
+import { useRouter } from 'next/navigation';
 
 // Helper to safely convert Firestore timestamp or string to a Date object
 const toDate = (timestamp: any): Date => {
@@ -33,6 +34,7 @@ const toDate = (timestamp: any): Date => {
 
 export default function ClientsPage() {
   const { user } = useUser()!;
+  const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearch();
@@ -145,7 +147,7 @@ export default function ClientsPage() {
             <TableBody>
               {filteredClients.length > 0 ? (
                 filteredClients.map(client => (
-                <TableRow key={client.id}>
+                <TableRow key={client.id} onClick={() => router.push(`/clients/${client.id}`)} className="cursor-pointer">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
@@ -161,7 +163,7 @@ export default function ClientsPage() {
                   <TableCell>
                     <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button aria-haspopup="true" size="icon" variant="ghost">
