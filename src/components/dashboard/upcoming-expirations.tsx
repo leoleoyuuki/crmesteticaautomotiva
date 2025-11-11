@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Bell, MessageCircle, User } from "lucide-react";
+import { Bell, MessageCircle, User, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -64,7 +64,11 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
             Próximos Vencimentos
         </CardTitle>
         <CardDescription>
-            Serviços com vencimento próximo. Para serviços que vencem em menos de 30 dias, um gatilho de mensagem do WhatsApp estará disponível.
+            <p>Serviços com vencimento próximo. Para os que vencem em menos de 30 dias, um gatilho de mensagem do WhatsApp estará disponível.</p>
+            <p className="flex items-center gap-2 mt-2 text-xs">
+              <Lightbulb className="h-4 w-4 text-yellow-400" />
+              <strong>Dica:</strong> Envie uma foto do resultado do último serviço para aumentar a chance de renovação!
+            </p>
         </CardDescription>
       </CardHeader>
       <CardContent>
