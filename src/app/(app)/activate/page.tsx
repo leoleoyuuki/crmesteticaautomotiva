@@ -13,7 +13,7 @@ import { Loader2, MessageCircle } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { auth, firestore } from '@/firebase/firebase';
 import { Separator } from '@/components/ui/separator';
-import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, writeBatch, updateDoc } from 'firebase/firestore';
 import { addMonths } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -78,7 +78,7 @@ function ActivatePageContent() {
         batch.update(codeDoc.ref, {
           isUsed: true,
           usedBy: user.uid,
-          usedAt: serverTimestamp(),
+          usedAt: now, // Using client date
         });
 
         batch.update(userDocRef, {
@@ -103,7 +103,6 @@ function ActivatePageContent() {
     router.push('/login');
   };
 
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary">
       <Card className="w-full max-w-md">
@@ -111,7 +110,7 @@ function ActivatePageContent() {
             {isExpired ? (
               <>
                 <CardTitle className="text-3xl font-headline">Sua Ativação Expirou</CardTitle>
-                <CardDescription>Para continuar usando todos os recursos, por favor, adquira um novo código de ativação.</CardDescription>
+                <CardDescription>Insira um novo código para reativar seu acesso ou solicite um novo.</CardDescription>
               </>
             ) : (
               <>
@@ -121,52 +120,39 @@ function ActivatePageContent() {
             )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {isExpired ? (
-            <div className="text-center">
-               <Button asChild className="w-full">
-                  <a href="https://wa.me/11957211546?text=Ol%C3%A1%2C%20minha%20ativa%C3%A7%C3%A3o%20expirou%20e%20gostaria%20de%20adquirir%20um%20novo%20c%C3%B3digo." target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Solicitar Novo Código
-                  </a>
-              </Button>
+          <form onSubmit={form.handleSubmit(handleActivation)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Código de Ativação</Label>
+              <Input
+                id="code"
+                placeholder="ABCDEF"
+                {...form.register('code')}
+                className="text-center text-lg tracking-widest uppercase"
+              />
+              {form.formState.errors.code && <p className="text-sm text-destructive">{form.formState.errors.code.message}</p>}
             </div>
-          ) : (
-            <form onSubmit={form.handleSubmit(handleActivation)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Código de Ativação</Label>
-                <Input
-                  id="code"
-                  placeholder="ABCDEF"
-                  {...form.register('code')}
-                  className="text-center text-lg tracking-widest uppercase"
-                />
-                {form.formState.errors.code && <p className="text-sm text-destructive">{form.formState.errors.code.message}</p>}
-              </div>
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Ativar Conta
-              </Button>
-            </form>
-          )}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isExpired ? 'Reativar Conta' : 'Ativar Conta'}
+            </Button>
+          </form>
         </CardContent>
         <CardFooter className="flex-col gap-4">
             <Separator />
-            {!isExpired && (
-                 <div className="text-center text-sm text-muted-foreground">
-                    <p>Não possui um código de ativação?</p>
-                    <Button variant="link" asChild className="text-primary">
-                        <a href="https://wa.me/11957211546" target="_blank" rel="noopener noreferrer">
-                            <MessageCircle className="mr-2 h-4 w-4" />
-                            Solicitar um código
-                        </a>
-                    </Button>
-                </div>
-            )}
+            <div className="text-center text-sm text-muted-foreground">
+                <p>{isExpired ? "Precisa de um novo código?" : "Não possui um código de ativação?"}</p>
+                <Button variant="link" asChild className="text-primary">
+                    <a href="https://wa.me/11957211546?text=Ol%C3%A1%2C%20gostaria%20de%20adquirir%20um%20novo%20c%C3%B3digo%20de%20ativa%C3%A7%C3%A3o." target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Solicitar um código
+                    </a>
+                </Button>
+            </div>
            <Button variant="link" className="w-full text-muted-foreground" onClick={handleLogout}>
             Sair da conta
           </Button>
