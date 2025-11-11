@@ -11,6 +11,7 @@ import { useSearch } from '@/context/search-provider';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type AggregatedVehicle = Vehicle & {
   clientName: string;
@@ -19,6 +20,7 @@ type AggregatedVehicle = Vehicle & {
 
 export default function VehiclesPage() {
   const { user } = useUser()!;
+  const router = useRouter();
   const [vehicles, setVehicles] = useState<AggregatedVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearch();
@@ -129,7 +131,7 @@ export default function VehiclesPage() {
             <TableBody>
             {filteredVehicles.length > 0 ? (
                 filteredVehicles.map(vehicle => (
-                <TableRow key={vehicle.id}>
+                <TableRow key={vehicle.id} onClick={() => router.push(`/clients/${vehicle.clientId}`)} className="cursor-pointer">
                     <TableCell className="font-medium">{vehicle.make} {vehicle.model}</TableCell>
                     <TableCell>{vehicle.licensePlate}</TableCell>
                     <TableCell>{vehicle.year}</TableCell>

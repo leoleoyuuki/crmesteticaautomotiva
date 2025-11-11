@@ -11,10 +11,12 @@ import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type AggregatedService = ServiceRecord & {
   clientName: string;
   clientId: string;
+  vehicleId: string;
   vehicleMake: string;
   vehicleModel: string;
 };
@@ -35,6 +37,7 @@ const toDate = (timestamp: any): Date => {
 
 export default function ServicesPage() {
   const { user } = useUser()!;
+  const router = useRouter();
   const [services, setServices] = useState<AggregatedService[]>([]);
   const [loading, setLoading] = useState(true);
   const { searchTerm } = useSearch();
@@ -53,6 +56,7 @@ export default function ServicesPage() {
                 ...service,
                 clientName: client.name,
                 clientId: client.id,
+                vehicleId: vehicle.id,
                 vehicleMake: vehicle.make,
                 vehicleModel: vehicle.model,
                 date: toDate(service.date).toISOString()
@@ -156,12 +160,12 @@ export default function ServicesPage() {
             <TableBody>
             {filteredServices.length > 0 ? (
                 filteredServices.map(service => (
-                <TableRow key={service.id}>
+                <TableRow key={service.id} onClick={() => router.push(`/clients/${service.clientId}/vehicles/${service.vehicleId}/services/${service.id}/edit`)} className="cursor-pointer">
                     <TableCell className="font-medium">{service.serviceType}</TableCell>
                     <TableCell>{service.vehicleMake} {service.vehicleModel}</TableCell>
                     <TableCell>
-                        <Button variant="link" asChild className="p-0 h-auto">
-                            <Link href={`/clients/${service.clientId}`}>
+                        <Button variant="link" asChild className="p-0 h-auto" onClick={(e) => { e.stopPropagation(); router.push(`/clients/${service.clientId}`)}}>
+                           <Link href={`/clients/${service.clientId}`}>
                                 {service.clientName}
                             </Link>
                         </Button>
