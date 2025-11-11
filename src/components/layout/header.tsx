@@ -15,7 +15,10 @@ import { useEffect, useState } from "react";
 const getTitle = (pathname: string) => {
   if (pathname.startsWith('/dashboard')) return 'Painel';
   if (pathname.startsWith('/clients')) return 'Gestão de Clientes';
+  if (pathname.startsWith('/vehicles')) return 'Gestão de Veículos';
+  if (pathname.startsWith('/services')) return 'Histórico de Serviços';
   if (pathname.startsWith('/settings')) return 'Configurações';
+  if (pathname.startsWith('/admin')) return 'Painel do Administrador';
   return 'CRM AutoEstética';
 }
 
@@ -27,7 +30,7 @@ export function AppHeader() {
   const [localSearch, setLocalSearch] = useState(searchTerm);
 
   const title = getTitle(pathname);
-  const showSearch = pathname.startsWith('/dashboard') || pathname.startsWith('/clients');
+  const showSearch = pathname.startsWith('/dashboard') || pathname.startsWith('/clients') || pathname.startsWith('/vehicles') || pathname.startsWith('/services');
 
   useEffect(() => {
     // Reset search term when navigating away from searchable pages

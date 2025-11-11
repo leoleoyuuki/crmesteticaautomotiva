@@ -15,6 +15,8 @@ import {
   Users, 
   Settings,
   KeyRound,
+  Car,
+  Wrench,
 } from "lucide-react";
 import { useUser } from "@/firebase/auth/use-user";
 
@@ -43,6 +45,8 @@ export function AppSidebar() {
   const menuItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/clients", label: "Clientes", icon: Users },
+    { href: "/vehicles", label: "Veículos", icon: Car },
+    { href: "/services", label: "Serviços", icon: Wrench },
     { href: "/settings", label: "Configurações", icon: Settings },
   ];
 
