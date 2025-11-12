@@ -116,11 +116,11 @@ export default function RenewalsPage() {
             <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
                 <CardDescription>
-                  <p>Serviços que precisam de atenção para renovação nos próximos 2 meses.</p>
-                  <p className="flex items-center gap-2 mt-2 text-xs">
+                  <div>Serviços que precisam de atenção para renovação nos próximos 2 meses.</div>
+                  <div className="flex items-center gap-2 mt-2 text-xs">
                     <Lightbulb className="h-4 w-4 text-yellow-400" />
                     <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
-                  </p>
+                  </div>
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -156,11 +156,11 @@ export default function RenewalsPage() {
         <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
             <CardDescription>
-                <p>Serviços que precisam de atenção para renovação nos próximos 2 meses.</p>
-                <p className="flex items-center gap-2 mt-2 text-xs">
+                <div>Serviços que precisam de atenção para renovação nos próximos 2 meses.</div>
+                <div className="flex items-center gap-2 mt-2 text-xs">
                   <Lightbulb className="h-4 w-4 text-yellow-400" />
                   <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
-                </p>
+                </div>
             </CardDescription>
         </CardHeader>
         <CardContent>

@@ -64,11 +64,11 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
             Próximos Vencimentos
         </CardTitle>
         <CardDescription>
-            <p>Serviços com vencimento próximo. Para os que vencem em menos de 30 dias, um gatilho de mensagem do WhatsApp estará disponível.</p>
-            <p className="flex items-center gap-2 mt-2 text-xs">
+            <div>Serviços com vencimento próximo. Para os que vencem em menos de 30 dias, um gatilho de mensagem do WhatsApp estará disponível.</div>
+            <div className="flex items-center gap-2 mt-2 text-xs">
               <Lightbulb className="h-4 w-4 text-yellow-400" />
               <strong>Dica:</strong> Envie uma foto do resultado do último serviço para aumentar a chance de renovação!
-            </p>
+            </div>
         </CardDescription>
       </CardHeader>
       <CardContent>
