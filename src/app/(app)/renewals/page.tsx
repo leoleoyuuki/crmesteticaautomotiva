@@ -116,12 +116,12 @@ export default function RenewalsPage() {
             <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
                 <CardDescription>
-                  <div>Serviços que precisam de atenção para renovação nos próximos 2 meses.</div>
-                  <div className="flex items-center gap-2 mt-2 text-xs">
+                  Serviços que precisam de atenção para renovação nos próximos 2 meses.
+                </CardDescription>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Lightbulb className="h-4 w-4 text-yellow-400" />
                     <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
-                  </div>
-                </CardDescription>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -156,12 +156,12 @@ export default function RenewalsPage() {
         <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
             <CardDescription>
-                <div>Serviços que precisam de atenção para renovação nos próximos 2 meses.</div>
-                <div className="flex items-center gap-2 mt-2 text-xs">
-                  <Lightbulb className="h-4 w-4 text-yellow-400" />
-                  <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
-                </div>
+                Serviços que precisam de atenção para renovação nos próximos 2 meses.
             </CardDescription>
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              <Lightbulb className="h-4 w-4 text-yellow-400" />
+              <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
+            </div>
         </CardHeader>
         <CardContent>
         <Table>
