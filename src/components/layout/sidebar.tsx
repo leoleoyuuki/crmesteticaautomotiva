@@ -21,23 +21,32 @@ import {
 } from "lucide-react";
 import { useUser } from "@/firebase/auth/use-user";
 
-const CarIcon = (props: React.SVGProps<SVGSVGElement>) => (
+const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
-        {...props}
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 50 20"
+      width="50"
+      height="20"
+      {...props}
+    >
+      <path
+        d="M5 10 C15 4, 28 4, 38 10 L45 10 C48 10, 48 8, 45 8 L40 8 C38 6, 35 6, 32 8 L25 8"
         fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
+        stroke="hsl(var(--primary))"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-    >
-        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9L2 12v9c0 .6.4 1 1 1h2" />
-        <circle cx="7" cy="17" r="2" />
-        <path d="M9 17h6" />
-        <circle cx="17" cy="17" r="2" />
+      />
+      <path
+        d="M2 15 C10 12, 35 12, 48 15"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
-);
+  );
 
 
 export function AppSidebar() {
@@ -61,10 +70,8 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2 group/logo">
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-transparent border text-foreground/80 group-hover/logo:text-white group-hover/logo:bg-gradient-to-br from-purple-500 to-blue-500 transition-all duration-300">
-                <CarIcon className="w-6 h-6" />
-            </div>
+        <div className="flex items-center gap-2 p-3">
+            <LogoIcon className="text-sidebar-foreground" />
             <h1 className="text-xl font-headline font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">AutoEstética</h1>
         </div>
       </SidebarHeader>
