@@ -25,7 +25,7 @@ type RenewalService = {
   expirationDate: string;
 };
 
-// Helper to safely convert Firestore timestamp or string to a Date object
+// Helper to safelyy convert Firestore timestamp or string to a Date object
 const toDate = (timestamp: any): Date => {
     if (timestamp && typeof timestamp.seconds === 'number') {
       return new Date(timestamp.seconds * 1000);
