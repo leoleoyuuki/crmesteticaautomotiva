@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { deleteDoc, doc, getDocs, collection, writeBatch } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
@@ -59,8 +59,7 @@ export function DeleteClientButton({ userId, clientId }: DeleteClientButtonProps
           description: "O cliente e todos os seus dados foram removidos.",
         });
         setIsOpen(false);
-        router.push('/clients');
-        router.refresh();
+        router.refresh(); // Refresh the current page
       } catch (error) {
         console.error("Failed to delete client:", error);
         toast({
@@ -75,7 +74,8 @@ export function DeleteClientButton({ userId, clientId }: DeleteClientButtonProps
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+            <Trash2 className="mr-2 h-4 w-4" />
             Excluir
         </DropdownMenuItem>
       </AlertDialogTrigger>

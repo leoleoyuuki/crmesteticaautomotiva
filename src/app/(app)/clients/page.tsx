@@ -6,9 +6,9 @@ import { getClients } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal, User } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, User, Edit, Trash2, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Client } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -71,15 +71,16 @@ export default function ClientsPage() {
     return (
         <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-              <div>
+          <div className="flex items-center justify-between gap-2">
+              <div className="flex-1">
                   <CardTitle className="font-headline">Clientes</CardTitle>
                   <CardDescription>Gerencie seus clientes e veja seus históricos de serviço.</CardDescription>
               </div>
-              <Button asChild>
+              <Button asChild className="shrink-0">
                   <Link href="/clients/new">
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Adicionar Cliente
+                      <span className="hidden sm:inline">Adicionar Cliente</span>
+                      <span className="inline sm:hidden">Novo</span>
                   </Link>
               </Button>
           </div>
@@ -90,7 +91,7 @@ export default function ClientsPage() {
             <TableRow>
               <TableHead>Cliente</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead className="hidden md:table-cell">Telefone</TableHead>
+              <TableHead className="hidden lg:table-cell">Telefone</TableHead>
               <TableHead>Veículos</TableHead>
               <TableHead><span className="sr-only">Ações</span></TableHead>
             </TableRow>
@@ -105,7 +106,7 @@ export default function ClientsPage() {
                 </div>
               </TableCell>
               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[200px]" /></TableCell>
-              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[100px]" /></TableCell>
+              <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-[100px]" /></TableCell>
               <TableCell><Skeleton className="h-6 w-8 rounded-full" /></TableCell>
               <TableCell><Skeleton className="h-8 w-8" /></TableCell>
             </TableRow>
@@ -120,15 +121,16 @@ export default function ClientsPage() {
   return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-              <div>
+          <div className="flex items-center justify-between gap-2">
+              <div className="flex-1">
                   <CardTitle className="font-headline">Clientes</CardTitle>
                   <CardDescription>Gerencie seus clientes e veja seus históricos de serviço.</CardDescription>
               </div>
-              <Button asChild>
+              <Button asChild className="shrink-0">
                   <Link href="/clients/new">
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Adicionar Cliente
+                      <span className="hidden sm:inline">Adicionar Cliente</span>
+                      <span className="inline sm:hidden">Novo</span>
                   </Link>
               </Button>
           </div>
@@ -139,7 +141,7 @@ export default function ClientsPage() {
               <TableRow>
                 <TableHead>Cliente</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden md:table-cell">Telefone</TableHead>
+                <TableHead className="hidden lg:table-cell">Telefone</TableHead>
                 <TableHead>Veículos</TableHead>
                 <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
@@ -159,11 +161,11 @@ export default function ClientsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{client.email}</TableCell>
-                  <TableCell className="hidden md:table-cell">{client.phone}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{client.phone}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -173,12 +175,10 @@ export default function ClientsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <Link href={`/clients/${client.id}`} passHref>
-                          <DropdownMenuItem className="cursor-pointer">Ver Detalhes</DropdownMenuItem>
-                        </Link>
-                        <Link href={`/clients/${client.id}/edit`} passHref>
-                          <DropdownMenuItem className="cursor-pointer">Editar</DropdownMenuItem>
-                        </Link>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DeleteClientButton userId={user.uid} clientId={client.id} />
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -187,7 +187,7 @@ export default function ClientsPage() {
               ))
               ) : (
                   <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
                           {searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}
                       </TableCell>
                   </TableRow>

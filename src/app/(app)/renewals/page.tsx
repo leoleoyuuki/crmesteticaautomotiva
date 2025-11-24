@@ -118,18 +118,18 @@ export default function RenewalsPage() {
                 <CardDescription>
                   Serviços que precisam de atenção para renovação nos próximos 2 meses.
                 </CardDescription>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
                     <Lightbulb className="h-4 w-4 text-yellow-400" />
                     <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
                 </div>
-            </CardHeader>
-            <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Cliente</TableHead>
-                            <TableHead>Veículo</TableHead>
-                            <TableHead>Serviço</TableHead>
+                            <TableHead className="hidden sm:table-cell">Veículo</TableHead>
+                            <TableHead className="hidden md:table-cell">Serviço</TableHead>
                             <TableHead>Vence em</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
@@ -137,9 +137,9 @@ export default function RenewalsPage() {
                     <TableBody>
                         {Array.from({ length: 5 }).map((_, i) => (
                             <TableRow key={i}>
-                                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-[120px]" /></TableCell>
+                                <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[150px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-9 w-[150px] ml-auto" /></TableCell>
                             </TableRow>
@@ -158,67 +158,72 @@ export default function RenewalsPage() {
             <CardDescription>
                 Serviços que precisam de atenção para renovação nos próximos 2 meses.
             </CardDescription>
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+        </CardHeader>
+        <CardContent>
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground mb-4">
               <Lightbulb className="h-4 w-4 text-yellow-400" />
               <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
             </div>
-        </CardHeader>
-        <CardContent>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Veículo</TableHead>
-                    <TableHead>Serviço</TableHead>
-                    <TableHead>Vence em</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-            {filteredRenewals.length > 0 ? (
-                filteredRenewals.map(renewal => (
-                <TableRow key={renewal.serviceId}>
-                    <TableCell>
-                      <Button variant="link" asChild className="p-0 h-auto font-medium">
-                          <Link href={`/clients/${renewal.clientId}`}>
-                              {renewal.clientName}
-                          </Link>
-                      </Button>
-                    </TableCell>
-                    <TableCell>{renewal.vehicleMake} {renewal.vehicleModel}</TableCell>
-                    <TableCell className="font-medium">{renewal.serviceType}</TableCell>
-                    <TableCell>
-                        <div className="flex flex-col">
-                            <span className="font-medium text-amber-400">
-                                {formatDistanceToNow(new Date(renewal.expirationDate), { locale: ptBR, addSuffix: true })}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {new Date(renewal.expirationDate).toLocaleDateString('pt-BR')}
-                            </span>
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                        <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900">
-                            <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
-                                <MessageCircle className="mr-2 h-4 w-4" />
-                                WhatsApp
-                            </a>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                            <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>Renovar</Link>
-                        </Button>
-                    </TableCell>
-                </TableRow>
-                ))
-            ) : (
-                <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        {searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço para renovar nos próximos 2 meses."}
-                    </TableCell>
-                </TableRow>
-            )}
-            </TableBody>
-        </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead className="hidden sm:table-cell">Veículo</TableHead>
+                          <TableHead className="hidden md:table-cell">Serviço</TableHead>
+                          <TableHead>Vence em</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                  {filteredRenewals.length > 0 ? (
+                      filteredRenewals.map(renewal => (
+                      <TableRow key={renewal.serviceId}>
+                          <TableCell>
+                            <Button variant="link" asChild className="p-0 h-auto font-medium -ml-2">
+                                <Link href={`/clients/${renewal.clientId}`}>
+                                    {renewal.clientName}
+                                </Link>
+                            </Button>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">{renewal.vehicleMake} {renewal.vehicleModel}</TableCell>
+                          <TableCell className="font-medium hidden md:table-cell">{renewal.serviceType}</TableCell>
+                          <TableCell>
+                              <div className="flex flex-col">
+                                  <span className="font-medium text-amber-400">
+                                      {formatDistanceToNow(new Date(renewal.expirationDate), { locale: ptBR, addSuffix: true })}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                      {new Date(renewal.expirationDate).toLocaleDateString('pt-BR')}
+                                  </span>
+                              </div>
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                              <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900">
+                                  <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
+                                      <MessageCircle className="mr-2 h-4 w-4" />
+                                      <span className="hidden lg:inline">WhatsApp</span>
+                                  </a>
+                              </Button>
+                              <Button asChild variant="outline" size="sm">
+                                  <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>
+                                    <span className="hidden lg:inline">Renovar</span>
+                                    <span className="lg:hidden">Ver</span>
+                                  </Link>
+                              </Button>
+                          </TableCell>
+                      </TableRow>
+                      ))
+                  ) : (
+                      <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
+                              {searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço para renovar nos próximos 2 meses."}
+                          </TableCell>
+                      </TableRow>
+                  )}
+                  </TableBody>
+              </Table>
+            </div>
         </CardContent>
     </Card>
   );

@@ -105,23 +105,23 @@ export default function ClientDetailPage() {
   return (
       <div className="space-y-6">
         <Card>
-          <CardHeader className="flex flex-row items-center space-x-4">
+          <CardHeader className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <Avatar className="h-20 w-20 border">
                 <AvatarFallback className="bg-muted text-muted-foreground">
                     <User className="h-10 w-10"/>
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <CardTitle className="font-headline text-3xl">{client.name}</CardTitle>
-                <CardDescription className="flex items-center flex-wrap gap-x-4 gap-y-1 text-base">
+                <CardTitle className="font-headline text-2xl md:text-3xl">{client.name}</CardTitle>
+                <CardDescription className="flex flex-col md:flex-row md:items-center flex-wrap gap-x-4 gap-y-1 text-base mt-1">
                   <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>
                   <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {client.phone}</span>
                   <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Cliente desde {formattedDate}</span>
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <Button asChild variant="outline"><Link href={`/clients/${client.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar Cliente</Link></Button>
-                <Button asChild variant="outline"><Link href="/clients">Voltar</Link></Button>
+              <div className="flex w-full md:w-auto items-center gap-2">
+                <Button asChild variant="outline" className="w-full md:w-auto"><Link href={`/clients/${client.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar</Link></Button>
+                <Button asChild variant="outline" className="w-full md:w-auto"><Link href="/clients">Voltar</Link></Button>
               </div>
           </CardHeader>
         </Card>
@@ -129,7 +129,7 @@ export default function ClientDetailPage() {
         <ServiceRecommendations client={client} />
 
         <div>
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <h2 className="text-2xl font-headline flex items-center gap-2">
                     <Car /> Veículos
                 </h2>
@@ -145,13 +145,13 @@ export default function ClientDetailPage() {
             <div className="space-y-6">
               {client.vehicles.map(vehicle => (
                   <Card key={vehicle.id}>
-                      <CardHeader className="flex flex-row items-start justify-between">
+                      <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4">
                           <div>
                               <CardTitle className="font-headline">{vehicle.make} {vehicle.model}</CardTitle>
                               <CardDescription>{vehicle.year} - {vehicle.licensePlate}</CardDescription>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" asChild>
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Button size="sm" asChild className="flex-1">
                                 <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/new`}>
                                     <PlusCircle className="mr-2 h-4 w-4"/> Adicionar Serviço
                                 </Link>
@@ -163,7 +163,7 @@ export default function ClientDetailPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild><Link href={`/clients/${client.id}/vehicles/${vehicle.id}/edit`} className="cursor-pointer">Editar Veículo</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href={`/clients/${client.id}/vehicles/${vehicle.id}/edit`} className="cursor-pointer flex items-center"><Pencil className="mr-2 h-4 w-4" />Editar Veículo</Link></DropdownMenuItem>
                                     <DeleteVehicleButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} onSelect={(e) => e.preventDefault()} />
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -171,65 +171,67 @@ export default function ClientDetailPage() {
                       </CardHeader>
                       <CardContent>
                           <h4 className="font-semibold mb-2">Histórico de Serviços</h4>
-                          {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
-                          <Table>
-                              <TableHeader>
-                                  <TableRow>
-                                      <TableHead>Serviço</TableHead>
-                                      <TableHead>Data</TableHead>
-                                      <TableHead>Vencimento</TableHead>
-                                      <TableHead className="text-right">Custo</TableHead>
-                                      <TableHead className="text-center">Ações</TableHead>
-                                  </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                  {vehicle.serviceHistory.map(service => (
-                                      <TableRow key={service.id}>
-                                          <TableCell className="font-medium">{service.serviceType}</TableCell>
-                                          <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
-                                          <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                {getExpirationBadge(service.expirationDate)}
-                                            </div>
-                                          </TableCell>
-                                          <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
-                                          <TableCell className="text-center flex items-center justify-center gap-1">
-                                             {service.imageUrl && (
-                                                <Dialog>
-                                                  <DialogTrigger asChild>
-                                                     <Button variant="ghost" size="icon">
-                                                        <Camera className="h-4 w-4" />
-                                                      </Button>
-                                                  </DialogTrigger>
-                                                  <DialogContent className="max-w-3xl">
-                                                    <DialogHeader>
-                                                      <DialogTitle>Foto do Serviço: {service.serviceType}</DialogTitle>
-                                                      <DialogDescription>
-                                                        Realizado em: {new Date(service.date).toLocaleDateString('pt-BR')}
-                                                      </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="flex items-center justify-center">
-                                                       <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain" />
-                                                    </div>
-                                                  </DialogContent>
-                                                </Dialog>
-                                              )}
-                                              <Button variant="ghost" size="icon" asChild>
-                                                <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Link>
-                                              </Button>
-                                              <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
-                                          </TableCell>
-                                      </TableRow>
-                                  ))}
-                              </TableBody>
-                          </Table>
-                          ) : (
-                              <div className="text-center text-muted-foreground p-10 border rounded-md">
-                                  <p>Nenhum histórico de serviço para este veículo.</p>
-                              </div>
-                          )}
+                          <div className="overflow-x-auto">
+                            {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Serviço</TableHead>
+                                        <TableHead>Data</TableHead>
+                                        <TableHead>Vencimento</TableHead>
+                                        <TableHead className="text-right">Custo</TableHead>
+                                        <TableHead className="text-center">Ações</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {vehicle.serviceHistory.map(service => (
+                                        <TableRow key={service.id}>
+                                            <TableCell className="font-medium">{service.serviceType}</TableCell>
+                                            <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    {getExpirationBadge(service.expirationDate)}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
+                                            <TableCell className="text-center flex items-center justify-center gap-1">
+                                                {service.imageUrl && (
+                                                    <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <Camera className="h-4 w-4" />
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="max-w-3xl w-[95vw]">
+                                                        <DialogHeader>
+                                                        <DialogTitle>Foto do Serviço: {service.serviceType}</DialogTitle>
+                                                        <DialogDescription>
+                                                            Realizado em: {new Date(service.date).toLocaleDateString('pt-BR')}
+                                                        </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="flex items-center justify-center">
+                                                            <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                        </div>
+                                                    </DialogContent>
+                                                    </Dialog>
+                                                )}
+                                                <Button variant="ghost" size="icon" asChild>
+                                                    <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            ) : (
+                                <div className="text-center text-muted-foreground p-10 border rounded-md">
+                                    <p>Nenhum histórico de serviço para este veículo.</p>
+                                </div>
+                            )}
+                          </div>
                       </CardContent>
                   </Card>
               ))}

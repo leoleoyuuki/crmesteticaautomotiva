@@ -95,13 +95,13 @@ export default function ServicesPage() {
     return (
         <Card>
             <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div className="flex-1">
                         <CardTitle className="font-headline">Serviços Prestados</CardTitle>
-                        <CardDescription>Visualize todos os serviços realizados em todos os veículos.</CardDescription>
+                        <CardDescription>Visualize todos os serviços realizados.</CardDescription>
                     </div>
-                    <Button asChild>
-                        <Link href="/services/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Novo Serviço</Link>
+                    <Button asChild className="w-full sm:w-auto shrink-0">
+                        <Link href="/services/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Serviço</Link>
                     </Button>
                 </div>
             </CardHeader>
@@ -110,8 +110,8 @@ export default function ServicesPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Serviço</TableHead>
-                            <TableHead>Veículo</TableHead>
-                            <TableHead>Cliente</TableHead>
+                            <TableHead className="hidden sm:table-cell">Veículo</TableHead>
+                            <TableHead className="hidden md:table-cell">Cliente</TableHead>
                             <TableHead>Data</TableHead>
                             <TableHead className="text-right">Custo</TableHead>
                         </TableRow>
@@ -120,8 +120,8 @@ export default function ServicesPage() {
                         {Array.from({ length: 5 }).map((_, i) => (
                             <TableRow key={i}>
                                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-[120px]" /></TableCell>
+                                <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[150px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
                             </TableRow>
@@ -136,53 +136,55 @@ export default function ServicesPage() {
   return (
     <Card>
         <CardHeader>
-             <div className="flex justify-between items-center">
-                <div>
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div className="flex-1">
                     <CardTitle className="font-headline">Serviços Prestados</CardTitle>
-                    <CardDescription>Visualize todos os serviços realizados em todos os veículos.</CardDescription>
+                    <CardDescription>Visualize todos os serviços realizados.</CardDescription>
                 </div>
-                <Button asChild>
-                    <Link href="/services/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Novo Serviço</Link>
+                <Button asChild className="w-full sm:w-auto shrink-0">
+                    <Link href="/services/new"><PlusCircle className="mr-2 h-4 w-4"/>Adicionar Serviço</Link>
                 </Button>
             </div>
         </CardHeader>
         <CardContent>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Serviço</TableHead>
-                    <TableHead>Veículo</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Custo</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-            {filteredServices.length > 0 ? (
-                filteredServices.map(service => (
-                <TableRow key={service.id} onClick={() => router.push(`/clients/${service.clientId}/vehicles/${service.vehicleId}/services/${service.id}/edit`)} className="cursor-pointer">
-                    <TableCell className="font-medium">{service.serviceType}</TableCell>
-                    <TableCell>{service.vehicleMake} {service.vehicleModel}</TableCell>
-                    <TableCell>
-                        <Button variant="link" asChild className="p-0 h-auto" onClick={(e) => { e.stopPropagation(); router.push(`/clients/${service.clientId}`)}}>
-                           <Link href={`/clients/${service.clientId}`}>
-                                {service.clientName}
-                            </Link>
-                        </Button>
-                    </TableCell>
-                    <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
-                    <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
-                </TableRow>
-                ))
-            ) : (
-                <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        {searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum serviço registrado."}
-                    </TableCell>
-                </TableRow>
-            )}
-            </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+              <TableHeader>
+                  <TableRow>
+                      <TableHead>Serviço</TableHead>
+                      <TableHead className="hidden sm:table-cell">Veículo</TableHead>
+                      <TableHead className="hidden md:table-cell">Cliente</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Custo</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+              {filteredServices.length > 0 ? (
+                  filteredServices.map(service => (
+                  <TableRow key={service.id} onClick={() => router.push(`/clients/${service.clientId}/vehicles/${service.vehicleId}/services/${service.id}/edit`)} className="cursor-pointer">
+                      <TableCell className="font-medium">{service.serviceType}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{service.vehicleMake} {service.vehicleModel}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                          <Button variant="link" asChild className="p-0 h-auto -ml-2" onClick={(e) => { e.stopPropagation(); router.push(`/clients/${service.clientId}`)}}>
+                            <Link href={`/clients/${service.clientId}`}>
+                                  {service.clientName}
+                              </Link>
+                          </Button>
+                      </TableCell>
+                      <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
+                  </TableRow>
+                  ))
+              ) : (
+                  <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
+                          {searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum serviço registrado."}
+                      </TableCell>
+                  </TableRow>
+              )}
+              </TableBody>
+          </Table>
+        </div>
         </CardContent>
     </Card>
   );

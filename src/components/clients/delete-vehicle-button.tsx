@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { deleteDoc, doc, collection, getDocs, writeBatch } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
@@ -64,7 +64,8 @@ export function DeleteVehicleButton({ userId, clientId, vehicleId, onSelect }: D
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem onSelect={onSelect} className="text-destructive">
+        <DropdownMenuItem onSelect={onSelect} className="text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center">
+            <Trash2 className="mr-2 h-4 w-4" />
             Excluir Veículo
         </DropdownMenuItem>
       </AlertDialogTrigger>
