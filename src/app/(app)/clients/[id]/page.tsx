@@ -26,6 +26,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
