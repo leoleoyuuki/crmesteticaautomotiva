@@ -1,0 +1,27 @@
+{
+  "name": "CRM AutoEstética",
+  "short_name": "AutoEstética",
+  "description": "Gerencie seus clientes e serviços de estética automotiva com o poder da IA.",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#020817",
+  "background_color": "#020817",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait"
+}
