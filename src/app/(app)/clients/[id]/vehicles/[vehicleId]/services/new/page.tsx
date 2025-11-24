@@ -12,6 +12,23 @@ import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { addMonths } from 'date-fns';
 
+async function uploadImage(imageDataUrl: string): Promise<string> {
+    const blob = await fetch(imageDataUrl).then(res => res.blob());
+    const file = new File([blob], `service-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+    const response = await fetch(`/api/upload?filename=${file.name}`, {
+        method: 'POST',
+        body: file,
+    });
+
+    if (!response.ok) {
+        throw new Error('Falha no upload da imagem.');
+    }
+
+    const newBlob = await response.json();
+    return newBlob.url;
+}
+
 export default function NewServicePage() {
   const { user } = useUser()!;
   const router = useRouter();
@@ -48,20 +65,26 @@ export default function NewServicePage() {
   }, [user, clientId, vehicleId, router]);
 
 
-  const handleAddService = async (data: ServiceRecordFormData) => {
+  const handleAddService = async (data: ServiceRecordFormData, imageDataUrl: string | null) => {
     if (!user) return;
     
-    const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
-
     startTransition(async () => {
       try {
+        let finalImageUrl = '';
+        if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
+          finalImageUrl = await uploadImage(imageDataUrl);
+        }
+        
+        const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
+
         const startDate = new Date(data.date);
         const expirationDate = addMonths(startDate, data.durationMonths);
 
         const newServiceData = {
             ...data,
             date: startDate.toISOString(),
-            expirationDate: expirationDate.toISOString()
+            expirationDate: expirationDate.toISOString(),
+            imageUrl: finalImageUrl,
         };
     
         await addDoc(serviceHistoryCollection, newServiceData);

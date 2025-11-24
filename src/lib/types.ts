@@ -29,7 +29,7 @@ export interface ServiceRecord {
   id: string;
   serviceType: string;
   date: string;
-  notes: string;
+  notes?: string;
   cost: number;
   durationMonths: number;
   expirationDate: string;

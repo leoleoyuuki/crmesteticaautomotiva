@@ -102,7 +102,8 @@ export async function getClients(userId: string): Promise<Client[]> {
                         cost: serviceData.cost,
                         durationMonths: serviceData.durationMonths,
                         date: toISOString(serviceData.date),
-                        expirationDate: toISOString(serviceData.expirationDate)
+                        expirationDate: toISOString(serviceData.expirationDate),
+                        imageUrl: serviceData.imageUrl,
                     } as ServiceRecord;
                 });
                 

@@ -29,20 +29,23 @@ const formSchema = z.object({
   cost: z.coerce.number().min(0, { message: 'O custo não pode ser negativo.' }),
   durationMonths: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 mês.' }),
   notes: z.string().optional(),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Convert form data to match the expected type
-const toServiceRecordFormData = (data: FormValues): ServiceRecordFormData => ({
-    ...data,
+const toServiceRecordFormData = (data: FormValues, finalImageUrl?: string | null): ServiceRecordFormData => ({
+    serviceType: data.serviceType,
     date: data.date.toISOString(),
+    cost: data.cost,
+    durationMonths: data.durationMonths,
+    notes: data.notes,
+    imageUrl: finalImageUrl || data.imageUrl || '',
 });
 
 interface ServiceFormProps {
   service?: ServiceRecord;
-  onSave: (data: ServiceRecordFormData) => Promise<any>;
+  onSave: (data: ServiceRecordFormData, imageDataUrl: string | null) => Promise<any>;
   savingText?: string;
   cancelHref: string;
   isPending: boolean;
@@ -58,16 +61,16 @@ export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando
         cost: service?.cost || 0,
         durationMonths: service?.durationMonths || 6,
         notes: service?.notes || '',
-        imageUrl: service?.imageUrl || '',
+        imageUrl: service?.imageUrl || null,
     },
   });
 
   async function onSubmit(values: FormValues) {
-      await onSave(toServiceRecordFormData(values));
+      await onSave(toServiceRecordFormData(values), values.imageUrl);
   }
   
-  const handleImageUpload = (url: string) => {
-    form.setValue('imageUrl', url);
+  const handleImageChange = (dataUrl: string | null) => {
+    form.setValue('imageUrl', dataUrl);
   }
 
   return (
@@ -177,8 +180,9 @@ export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando
               <FormLabel>Foto do Serviço</FormLabel>
               <FormControl>
                  <ImageUpload 
-                    onUploadSuccess={handleImageUpload}
+                    onImageChange={handleImageChange}
                     initialImageUrl={field.value}
+                    isSubmitting={isPending}
                  />
               </FormControl>
               <FormMessage />

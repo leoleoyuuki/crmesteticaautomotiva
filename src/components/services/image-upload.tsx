@@ -8,11 +8,12 @@ import Image from 'next/image';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
 interface ImageUploadProps {
-  onUploadSuccess: (url: string) => void;
+  onImageChange: (dataUrl: string | null) => void;
   initialImageUrl?: string | null;
+  isSubmitting: boolean;
 }
 
-export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadProps) {
+export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: ImageUploadProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,7 +22,6 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(initialImageUrl || null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     // Stop camera stream when component unmounts
@@ -32,6 +32,10 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
       }
     };
   }, []);
+  
+  useEffect(() => {
+    onImageChange(capturedImage);
+  }, [capturedImage, onImageChange]);
 
   const getCameraPermission = async () => {
     if (hasCameraPermission === false) {
@@ -80,7 +84,6 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
       const dataUrl = canvas.toDataURL('image/jpeg');
       setCapturedImage(dataUrl);
       turnOffCamera();
-      uploadImage(dataUrl);
     }
   };
 
@@ -91,51 +94,14 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
         setCapturedImage(dataUrl);
-        uploadImage(dataUrl);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadImage = async (dataUrl: string) => {
-    setUploading(true);
-    const blob = await fetch(dataUrl).then(res => res.blob());
-    const file = new File([blob], `service-${Date.now()}.jpg`, { type: 'image/jpeg' });
-
-    try {
-      const response = await fetch(`/api/upload?filename=${file.name}`, {
-        method: 'POST',
-        body: file,
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha no upload da imagem.');
-      }
-
-      const newBlob = await response.json();
-      onUploadSuccess(newBlob.url);
-      toast({
-        title: 'Sucesso!',
-        description: 'Imagem enviada.',
-      });
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro de Upload',
-        description: (error as Error).message || 'Não foi possível enviar a imagem.',
-      });
-      // Rollback UI on failure
-      setCapturedImage(initialImageUrl || null);
-    } finally {
-      setUploading(false);
     }
   };
 
   const reset = () => {
     setCapturedImage(null);
     setIsCameraOn(false);
-    onUploadSuccess(''); // Notify parent that image is removed
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -154,11 +120,11 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
           <div className="space-y-4">
             <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
             <div className="flex justify-center gap-2">
-              <Button onClick={takePicture} disabled={uploading}>
+              <Button type="button" onClick={takePicture}>
                 <Camera className="mr-2" />
                 Tirar Foto
               </Button>
-              <Button variant="outline" onClick={turnOffCamera}>
+              <Button type="button" variant="outline" onClick={turnOffCamera}>
                 Cancelar
               </Button>
             </div>
@@ -172,17 +138,18 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
               height={300}
               className="rounded-md mx-auto object-cover"
             />
-             {uploading && (
+             {isSubmitting && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-md">
                     <Loader2 className="h-8 w-8 animate-spin text-white" />
+                    <span className="text-white ml-2">Enviando...</span>
                 </div>
             )}
             <div className="flex justify-center gap-2">
-              <Button variant="outline" onClick={retake} disabled={uploading}>
+              <Button type="button" variant="outline" onClick={retake} disabled={isSubmitting}>
                 <RotateCcw className="mr-2" />
                 Tirar Outra
               </Button>
-              <Button variant="destructive" onClick={reset} disabled={uploading}>
+              <Button type="button" variant="destructive" onClick={reset} disabled={isSubmitting}>
                 <X className="mr-2" />
                 Remover
               </Button>
@@ -192,11 +159,11 @@ export function ImageUpload({ onUploadSuccess, initialImageUrl }: ImageUploadPro
           <div className="flex flex-col items-center justify-center gap-4 p-6">
              <p className="text-muted-foreground">Anexe uma foto do resultado do serviço.</p>
             <div className="flex gap-4">
-              <Button onClick={getCameraPermission} disabled={uploading}>
+              <Button type="button" onClick={getCameraPermission} disabled={isSubmitting}>
                 <Camera className="mr-2" />
                 Usar Câmera
               </Button>
-              <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
                 <Upload className="mr-2" />
                 Enviar Arquivo
               </Button>

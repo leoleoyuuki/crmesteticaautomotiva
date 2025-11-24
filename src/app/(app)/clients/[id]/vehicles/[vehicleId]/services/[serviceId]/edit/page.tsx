@@ -13,6 +13,23 @@ import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { addMonths } from 'date-fns';
 
+async function uploadImage(imageDataUrl: string): Promise<string> {
+  const blob = await fetch(imageDataUrl).then(res => res.blob());
+  const file = new File([blob], `service-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+  const response = await fetch(`/api/upload?filename=${file.name}`, {
+      method: 'POST',
+      body: file,
+  });
+
+  if (!response.ok) {
+      throw new Error('Falha no upload da imagem.');
+  }
+
+  const newBlob = await response.json();
+  return newBlob.url;
+}
+
 export default function EditServicePage() {
   const { user } = useUser()!;
   const router = useRouter();
@@ -44,20 +61,31 @@ export default function EditServicePage() {
     }
   }, [user, clientId, vehicleId, serviceId, router]);
 
-  const handleUpdateService = async (data: ServiceRecordFormData) => {
+  const handleUpdateService = async (data: ServiceRecordFormData, imageDataUrl: string | null) => {
     if (!user || !service) return;
 
-    const serviceDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
-    
     startTransition(async () => {
       try {
+        let finalImageUrl = service.imageUrl || '';
+        
+        // Only upload if the image data is a new base64 string
+        if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
+          finalImageUrl = await uploadImage(imageDataUrl);
+        } else if (imageDataUrl === null) {
+          // Image was removed
+          finalImageUrl = '';
+        }
+
+        const serviceDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
+        
         const startDate = new Date(data.date);
         const expirationDate = addMonths(startDate, data.durationMonths);
 
         const updatedServiceData = {
             ...data,
             date: startDate.toISOString(),
-            expirationDate: expirationDate.toISOString()
+            expirationDate: expirationDate.toISOString(),
+            imageUrl: finalImageUrl,
         };
         
         await updateDoc(serviceDocRef, updatedServiceData as any);
