@@ -9,6 +9,7 @@ import {
   SidebarMenu, 
   SidebarMenuItem, 
   SidebarMenuButton,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -20,6 +21,7 @@ import {
   History,
 } from "lucide-react";
 import { useUser } from "@/firebase/auth/use-user";
+import { useEffect } from "react";
 
 const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
@@ -52,7 +54,16 @@ const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useUser();
+  const { setOpenMobile, isMobile } = useSidebar();
   const isAdmin = user?.uid === 'wtMBWT7OAoXHj9Hlb6alnfFqK3Q2';
+
+  // Close sidebar on mobile after navigation
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, isMobile, setOpenMobile]);
+
 
   const menuItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
