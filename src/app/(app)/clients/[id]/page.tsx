@@ -5,7 +5,7 @@ import { notFound, useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User, Camera } from "lucide-react";
+import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User, Camera, Wallet, Clock, StickyNote } from "lucide-react";
 import { ServiceRecommendations } from "@/components/clients/recommendations";
 import Link from "next/link";
 import {
@@ -21,13 +21,11 @@ import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button"
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { isPast, isWithinInterval, addMonths, formatDistanceToNow } from "date-fns";
+import { isPast, isWithinInterval, addMonths, formatDistanceToNow, format } from "date-fns";
 import { ptBR } from 'date-fns/locale';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -80,7 +78,7 @@ export default function ClientDetailPage() {
     return <div className="flex h-screen items-center justify-center">Carregando...</div>;
   }
 
-  const formattedDate = toDate(client.createdAt).toLocaleDateString('pt-BR');
+  const formattedDate = format(toDate(client.createdAt), "dd 'de' MMM 'de' yyyy", { locale: ptBR });
 
   const getExpirationBadge = (expirationDate: string) => {
     const now = new Date();
@@ -105,24 +103,28 @@ export default function ClientDetailPage() {
   return (
       <div className="space-y-6">
         <Card>
-          <CardHeader className="flex flex-col md:flex-row items-start md:items-center gap-4">
-              <Avatar className="h-20 w-20 border">
-                <AvatarFallback className="bg-muted text-muted-foreground">
-                    <User className="h-10 w-10"/>
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <CardTitle className="font-headline text-2xl md:text-3xl">{client.name}</CardTitle>
-                <CardDescription className="flex flex-col md:flex-row md:items-center flex-wrap gap-x-4 gap-y-1 text-base mt-1">
-                  <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>
-                  <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {client.phone}</span>
-                  <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Cliente desde {formattedDate}</span>
-                </CardDescription>
-              </div>
-              <div className="flex w-full md:w-auto items-center gap-2">
-                <Button asChild variant="outline" className="w-full md:w-auto"><Link href={`/clients/${client.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar</Link></Button>
-                <Button asChild variant="outline" className="w-full md:w-auto"><Link href="/clients">Voltar</Link></Button>
-              </div>
+          <CardHeader className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Avatar className="h-20 w-20 border">
+                  <AvatarFallback className="bg-muted text-muted-foreground">
+                      <User className="h-10 w-10"/>
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-center sm:text-left">
+                  <CardTitle className="font-headline text-2xl md:text-3xl">{client.name}</CardTitle>
+                  <CardDescription className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-x-4 gap-y-1 text-base mt-1 justify-center sm:justify-start">
+                    <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>
+                  </CardDescription>
+                </div>
+            </div>
+            <div className="text-center sm:text-left text-muted-foreground space-y-2 text-sm">
+                <p className="flex items-center justify-center sm:justify-start gap-2"><Phone className="w-4 h-4" /> {client.phone}</p>
+                <p className="flex items-center justify-center sm:justify-start gap-2"><Calendar className="w-4 h-4" /> Cliente desde {formattedDate}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row w-full items-center gap-2">
+              <Button asChild variant="outline" className="w-full sm:w-auto"><Link href={`/clients/${client.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar Cliente</Link></Button>
+              <Button asChild variant="outline" className="w-full sm:w-auto"><Link href="/clients">Voltar</Link></Button>
+            </div>
           </CardHeader>
         </Card>
 
@@ -146,7 +148,7 @@ export default function ClientDetailPage() {
               {client.vehicles.map(vehicle => (
                   <Card key={vehicle.id}>
                       <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                          <div>
+                          <div className="flex-1">
                               <CardTitle className="font-headline">{vehicle.make} {vehicle.model}</CardTitle>
                               <CardDescription>{vehicle.year} - {vehicle.licensePlate}</CardDescription>
                           </div>
@@ -170,31 +172,86 @@ export default function ClientDetailPage() {
                           </div>
                       </CardHeader>
                       <CardContent>
-                          <h4 className="font-semibold mb-2">Histórico de Serviços</h4>
-                          <div className="overflow-x-auto">
+                          <h4 className="font-semibold mb-4">Histórico de Serviços</h4>
+                          
+                          {/* Mobile View: Vertical Cards */}
+                          <div className="grid grid-cols-1 sm:hidden gap-4">
                             {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Serviço</TableHead>
-                                        <TableHead>Data</TableHead>
-                                        <TableHead>Vencimento</TableHead>
-                                        <TableHead className="text-right">Custo</TableHead>
-                                        <TableHead className="text-center">Ações</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {vehicle.serviceHistory.map(service => (
-                                        <TableRow key={service.id}>
-                                            <TableCell className="font-medium">{service.serviceType}</TableCell>
-                                            <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    {getExpirationBadge(service.expirationDate)}
+                              vehicle.serviceHistory.map(service => (
+                                <div key={service.id} className="border rounded-lg p-4 space-y-3 bg-card/50">
+                                  <div className="font-bold text-lg">{service.serviceType}</div>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4" /> {format(new Date(service.date), 'dd/MM/yyyy')}</span>
+                                    <span className="font-semibold flex items-center gap-2"><Wallet className="h-4 w-4" /> R$ {service.cost.toFixed(2).replace('.', ',')}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    {getExpirationBadge(service.expirationDate)}
+                                  </div>
+                                  {service.notes && (
+                                    <p className="text-sm text-muted-foreground pt-1 flex items-start gap-2"><StickyNote className="h-4 w-4 mt-0.5 shrink-0" /> {service.notes}</p>
+                                  )}
+                                  <div className="flex items-center justify-end gap-1 pt-2 border-t border-border/50">
+                                     {service.imageUrl && (
+                                          <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <Camera className="h-4 w-4" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-3xl w-[95vw]">
+                                                <DialogHeader>
+                                                <DialogTitle>Foto do Serviço: {service.serviceType}</DialogTitle>
+                                                <DialogDescription>
+                                                    Realizado em: {new Date(service.date).toLocaleDateString('pt-BR')}
+                                                </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="flex items-center justify-center">
+                                                    <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
-                                            <TableCell className="text-center flex items-center justify-center gap-1">
+                                            </DialogContent>
+                                          </Dialog>
+                                      )}
+                                      <Button variant="ghost" size="icon" asChild>
+                                          <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
+                                              <Pencil className="h-4 w-4" />
+                                          </Link>
+                                      </Button>
+                                      <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                                <p>Nenhum histórico de serviço para este veículo.</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Desktop View: Table */}
+                          <div className="hidden sm:block overflow-x-auto">
+                            {vehicle.serviceHistory && vehicle.serviceHistory.length > 0 ? (
+                            <table className="w-full text-sm">
+                                <thead className="border-b">
+                                    <tr className="text-muted-foreground">
+                                        <th className="text-left font-medium p-2">Serviço</th>
+                                        <th className="text-left font-medium p-2">Data</th>
+                                        <th className="text-left font-medium p-2">Vencimento</th>
+                                        <th className="text-right font-medium p-2">Custo</th>
+                                        <th className="text-center font-medium p-2">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {vehicle.serviceHistory.map(service => (
+                                        <tr key={service.id} className="border-b">
+                                            <td className="font-medium p-2">{service.serviceType}</td>
+                                            <td className="p-2">{format(new Date(service.date), 'dd/MM/yyyy')}</td>
+                                            <td className="p-2">
+                                                {getExpirationBadge(service.expirationDate)}
+                                            </td>
+                                            <td className="text-right p-2">R$ {service.cost.toFixed(2).replace('.', ',')}</td>
+                                            <td className="p-2">
+                                              <div className="text-center flex items-center justify-center gap-1">
                                                 {service.imageUrl && (
                                                     <Dialog>
                                                     <DialogTrigger asChild>
@@ -221,11 +278,12 @@ export default function ClientDetailPage() {
                                                     </Link>
                                                 </Button>
                                                 <DeleteServiceButton userId={user.uid} clientId={client.id} vehicleId={vehicle.id} serviceId={service.id} />
-                                            </TableCell>
-                                        </TableRow>
+                                              </div>
+                                            </td>
+                                        </tr>
                                     ))}
-                                </TableBody>
-                            </Table>
+                                </tbody>
+                            </table>
                             ) : (
                                 <div className="text-center text-muted-foreground p-10 border rounded-md">
                                     <p>Nenhum histórico de serviço para este veículo.</p>
