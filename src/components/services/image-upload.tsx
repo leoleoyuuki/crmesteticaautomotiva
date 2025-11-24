@@ -158,12 +158,12 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
         ) : (
           <div className="flex flex-col items-center justify-center gap-4 p-6">
              <p className="text-muted-foreground">Anexe uma foto do resultado do serviço.</p>
-            <div className="flex gap-4">
-              <Button type="button" onClick={getCameraPermission} disabled={isSubmitting}>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <Button type="button" onClick={getCameraPermission} disabled={isSubmitting} className="w-full">
                 <Camera className="mr-2" />
                 Usar Câmera
               </Button>
-              <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+              <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting} className="w-full">
                 <Upload className="mr-2" />
                 Enviar Arquivo
               </Button>
