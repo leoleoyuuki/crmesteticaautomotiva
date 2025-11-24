@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Car, User, Calendar, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type AggregatedService = ServiceRecord & {
@@ -147,44 +147,68 @@ export default function ServicesPage() {
             </div>
         </CardHeader>
         <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-              <TableHeader>
-                  <TableRow>
-                      <TableHead>Serviço</TableHead>
-                      <TableHead className="hidden sm:table-cell">Veículo</TableHead>
-                      <TableHead className="hidden md:table-cell">Cliente</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead className="text-right">Custo</TableHead>
-                  </TableRow>
-              </TableHeader>
-              <TableBody>
-              {filteredServices.length > 0 ? (
-                  filteredServices.map(service => (
-                  <TableRow key={service.id} onClick={() => router.push(`/clients/${service.clientId}/vehicles/${service.vehicleId}/services/${service.id}/edit`)} className="cursor-pointer">
-                      <TableCell className="font-medium">{service.serviceType}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{service.vehicleMake} {service.vehicleModel}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                          <Button variant="link" asChild className="p-0 h-auto -ml-2" onClick={(e) => { e.stopPropagation(); router.push(`/clients/${service.clientId}`)}}>
-                            <Link href={`/clients/${service.clientId}`}>
-                                  {service.clientName}
-                              </Link>
-                          </Button>
-                      </TableCell>
-                      <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
-                      <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
-                  </TableRow>
-                  ))
-              ) : (
-                  <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
-                          {searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum serviço registrado."}
-                      </TableCell>
-                  </TableRow>
-              )}
-              </TableBody>
-          </Table>
-        </div>
+            {/* Mobile View */}
+            <div className="md:hidden grid grid-cols-1 gap-4">
+                {filteredServices.length > 0 ? (
+                    filteredServices.map(service => (
+                        <div key={service.id} className="border rounded-lg p-4 space-y-3 bg-card/50 cursor-pointer" onClick={() => router.push(`/clients/${service.clientId}/vehicles/${service.vehicleId}/services/${service.id}/edit`)}>
+                             <div className="flex items-center justify-between">
+                                <span className="font-bold text-lg">{service.serviceType}</span>
+                                <span className="font-semibold flex items-center gap-2"><Wallet className="h-4 w-4" /> R$ {service.cost.toFixed(2).replace('.', ',')}</span>
+                             </div>
+                             <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
+                               <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${service.clientId}`} onClick={(e) => e.stopPropagation()} className="hover:underline">{service.clientName}</Link></p>
+                               <p className="flex items-center gap-2"><Car className="h-4 w-4" /> {service.vehicleMake} {service.vehicleModel}</p>
+                               <p className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {new Date(service.date).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                        <p>{searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum serviço registrado."}</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Serviço</TableHead>
+                            <TableHead className="hidden sm:table-cell">Veículo</TableHead>
+                            <TableHead className="hidden md:table-cell">Cliente</TableHead>
+                            <TableHead>Data</TableHead>
+                            <TableHead className="text-right">Custo</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {filteredServices.length > 0 ? (
+                        filteredServices.map(service => (
+                        <TableRow key={service.id} onClick={() => router.push(`/clients/${service.clientId}/vehicles/${service.vehicleId}/services/${service.id}/edit`)} className="cursor-pointer">
+                            <TableCell className="font-medium">{service.serviceType}</TableCell>
+                            <TableCell className="hidden sm:table-cell">{service.vehicleMake} {service.vehicleModel}</TableCell>
+                            <TableCell className="hidden md:table-cell">
+                                <Button variant="link" asChild className="p-0 h-auto -ml-2" onClick={(e) => { e.stopPropagation(); router.push(`/clients/${service.clientId}`)}}>
+                                    <Link href={`/clients/${service.clientId}`}>
+                                        {service.clientName}
+                                    </Link>
+                                </Button>
+                            </TableCell>
+                            <TableCell>{new Date(service.date).toLocaleDateString('pt-BR')}</TableCell>
+                            <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
+                        </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
+                                {searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum serviço registrado."}
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    </TableBody>
+                </Table>
+            </div>
         </CardContent>
     </Card>
   );

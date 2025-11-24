@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { History, MessageCircle, Lightbulb } from 'lucide-react';
+import { History, MessageCircle, Lightbulb, Car, User } from 'lucide-react';
 import { addMonths, formatDistanceToNow, isAfter, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -164,7 +164,50 @@ export default function RenewalsPage() {
               <Lightbulb className="h-4 w-4 text-yellow-400" />
               <strong>Dica:</strong> Envie uma foto de como o carro ficou na última vez para incentivar o cliente!
             </div>
-            <div className="overflow-x-auto">
+            
+            {/* Mobile View */}
+            <div className="md:hidden grid grid-cols-1 gap-4">
+                {filteredRenewals.length > 0 ? (
+                    filteredRenewals.map(renewal => (
+                        <div key={renewal.serviceId} className="border rounded-lg p-4 space-y-3 bg-card/50">
+                            <div className="font-bold text-lg">{renewal.serviceType}</div>
+                            <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
+                                <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${renewal.clientId}`} className="hover:underline">{renewal.clientName}</Link></p>
+                                <p className="flex items-center gap-2"><Car className="h-4 w-4" /> {renewal.vehicleMake} {renewal.vehicleModel}</p>
+                            </div>
+                            <div className="pt-2">
+                                <p className="text-sm text-muted-foreground">Vence:</p>
+                                <p className="font-medium text-amber-400">
+                                    {formatDistanceToNow(new Date(renewal.expirationDate), { locale: ptBR, addSuffix: true })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    {new Date(renewal.expirationDate).toLocaleDateString('pt-BR')}
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/50">
+                                <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900 flex-1">
+                                  <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
+                                      <MessageCircle className="mr-2 h-4 w-4" />
+                                      WhatsApp
+                                  </a>
+                                </Button>
+                                <Button asChild variant="outline" size="sm" className="flex-1">
+                                    <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>
+                                      Renovar
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                        <p>{searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço para renovar nos próximos 2 meses."}</p>
+                    </div>
+                )}
+            </div>
+            
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                   <TableHeader>
                       <TableRow>

@@ -6,7 +6,7 @@ import { getClients } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal, User, Edit, Trash2, Eye } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, User, Edit, Trash2, Eye, Mail, Phone, Car } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -136,64 +136,116 @@ export default function ClientsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden lg:table-cell">Telefone</TableHead>
-                <TableHead>Veículos</TableHead>
-                <TableHead><span className="sr-only">Ações</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClients.length > 0 ? (
+          {/* Mobile View */}
+          <div className="md:hidden grid grid-cols-1 gap-4">
+             {filteredClients.length > 0 ? (
                 filteredClients.map(client => (
-                <TableRow key={client.id} onClick={() => router.push(`/clients/${client.id}`)} className="cursor-pointer">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                          <AvatarFallback className="bg-muted text-muted-foreground">
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                      </Avatar>
-                      <div className="font-medium">{client.name}</div>
+                    <div key={client.id} className="border rounded-lg p-4 space-y-3 bg-card/50 cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarFallback className="bg-muted text-muted-foreground">
+                                        <User className="h-5 w-5" />
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-semibold">{client.name}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-2"><Car className="h-4 w-4" /> {client.vehicles ? client.vehicles.length : 0} veículos</p>
+                                </div>
+                            </div>
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">Toggle menu</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DeleteClientButton userId={user.uid} clientId={client.id} />
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1 pt-3 border-t border-border/50">
+                           <p className="flex items-center gap-2"><Mail className="h-4 w-4" /> {client.email}</p>
+                           <p className="flex items-center gap-2"><Phone className="h-4 w-4" /> {client.phone}</p>
+                        </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{client.email}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{client.phone}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DeleteClientButton userId={user.uid} clientId={client.id} />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                ))
+            ) : (
+                 <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                    <p>{searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}</p>
+                </div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="hidden lg:table-cell">Telefone</TableHead>
+                  <TableHead>Veículos</TableHead>
+                  <TableHead><span className="sr-only">Ações</span></TableHead>
                 </TableRow>
-              ))
-              ) : (
-                  <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
-                          {searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}
-                      </TableCell>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.length > 0 ? (
+                  filteredClients.map(client => (
+                  <TableRow key={client.id} onClick={() => router.push(`/clients/${client.id}`)} className="cursor-pointer">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-muted text-muted-foreground">
+                              <User className="h-5 w-5" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{client.name}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{client.email}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{client.phone}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DeleteClientButton userId={user.uid} clientId={client.id} />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
+                            {searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}
+                        </TableCell>
+                    </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
   );

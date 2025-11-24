@@ -26,7 +26,7 @@ const formSchema = z.object({
   make: z.string().min(2, { message: 'A marca deve ter pelo menos 2 caracteres.' }),
   model: z.string().min(1, { message: 'O modelo é obrigatório.' }),
   year: z.coerce.number().min(1900, { message: 'Ano inválido.' }).max(new Date().getFullYear() + 1, { message: 'Ano inválido.' }),
-  licensePlate: z.string().min(7, { message: 'A placa deve ter 7 caracteres.' }).max(7, { message: 'A placa deve ter 7 caracteres.' }),
+  licensePlate: z.string().min(7, { message: 'A placa deve ter 7 caracteres.' }).max(8, { message: 'A placa deve ter no máximo 8 caracteres.' }).toUpperCase(),
 });
 
 type VehicleFormValues = z.infer<typeof formSchema>;
@@ -66,7 +66,7 @@ export default function NewVehiclePage() {
   }, [user]);
 
   const onClientAdded = (newClient: Client) => {
-    setClients(prev => [...prev, newClient]);
+    setClients(prev => [...prev, newClient].sort((a, b) => a.name.localeCompare(b.name)));
     form.setValue('clientId', newClient.id);
   }
 
@@ -131,7 +131,7 @@ export default function NewVehiclePage() {
                              <AddClientDialog onClientAdded={onClientAdded} isOpen={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
                                 <Button type="button" variant="outline" className="shrink-0">
                                     <PlusCircle className="mr-2 h-4 w-4" />
-                                    Novo Cliente
+                                    Novo
                                 </Button>
                             </AddClientDialog>
                           </div>
@@ -189,7 +189,7 @@ export default function NewVehiclePage() {
                                 <FormItem>
                                 <FormLabel>Placa</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Ex: ABC1D23" {...field} />
+                                    <Input placeholder="Ex: ABC1D23" {...field} className="uppercase"/>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>

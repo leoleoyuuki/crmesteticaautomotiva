@@ -155,8 +155,8 @@ export default function DashboardPage() {
             <Skeleton className="h-[126px]" />
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Skeleton className="col-span-4 h-[330px]" />
-            <Skeleton className="col-span-4 lg:col-span-3 h-[330px]" />
+            <Skeleton className="col-span-full lg:col-span-4 h-[330px]" />
+            <Skeleton className="col-span-full lg:col-span-3 h-[330px]" />
           </div>
           <Skeleton className="h-[400px]" />
         </div>
@@ -170,8 +170,8 @@ export default function DashboardPage() {
           <StatCard title="Total de Clientes" value={stats.totalClients.toString()} icon={Users} description="Clientes cadastrados na base" />
           <StatCard title="Total de Serviços" value={stats.totalServices.toString()} icon={TrendingUp} description="Serviços prestados" />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+          <Card className="lg:col-span-4">
              <CardHeader>
               <CardTitle className="font-headline">Receita Mensal</CardTitle>
               <CardDescription>Receita gerada nos últimos 6 meses.</CardDescription>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
               <RevenueChart data={monthlyRevenueData} />
             </CardContent>
           </Card>
-          <Card className="col-span-4 lg:col-span-3">
+          <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle className="font-headline">Crescimento de Clientes</CardTitle>
               <CardDescription>Novos clientes nos últimos 6 meses.</CardDescription>

@@ -9,7 +9,7 @@ import { getActivationCodes } from '@/lib/data';
 import { ActivationCode } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from '@/components/ui/label';
-import { Loader2, Copy } from 'lucide-react';
+import { Loader2, Copy, Calendar, Clock, User as UserIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -93,7 +93,7 @@ export default function AdminCodesPage() {
           <CardTitle>Gerar Código de Ativação</CardTitle>
           <CardDescription>Selecione a duração e gere um novo código de ativação para um usuário.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col md:flex-row items-center gap-6">
+        <CardContent className="flex flex-col md:flex-row items-start md:items-center gap-6">
           <RadioGroup defaultValue="3" onValueChange={(val) => setDuration(Number(val))} className="flex gap-4">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="3" id="r1" />
@@ -121,47 +121,82 @@ export default function AdminCodesPage() {
           <CardDescription>Lista de todos os códigos de ativação gerados.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Duração</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criado Em</TableHead>
-                <TableHead>Usado Por</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {codes.length > 0 ? (
+          {/* Mobile View */}
+          <div className="md:hidden grid grid-cols-1 gap-4">
+            {codes.length > 0 ? (
                 codes.map((code) => (
-                  <TableRow key={code.id}>
-                    <TableCell className="font-mono">
-                      <div className="flex items-center gap-2">
-                        {code.code}
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(code.code)}>
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>{code.durationMonths} meses</TableCell>
-                    <TableCell>
-                      <Badge variant={code.isUsed ? 'secondary' : 'default'}>
-                        {code.isUsed ? 'Usado' : 'Disponível'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{format(new Date(code.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</TableCell>
-                    <TableCell>{code.usedBy || '---'}</TableCell>
-                  </TableRow>
+                  <div key={code.id} className="border rounded-lg p-4 space-y-3 bg-card/50">
+                     <div className="flex items-center justify-between">
+                        <Badge variant={code.isUsed ? 'secondary' : 'default'}>
+                            {code.isUsed ? 'Usado' : 'Disponível'}
+                        </Badge>
+                         <span className="text-sm text-muted-foreground">{code.durationMonths} meses</span>
+                     </div>
+                    <div className="font-mono text-xl font-bold flex items-center justify-between">
+                      {code.code}
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyToClipboard(code.code)}>
+                          <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
+                        <p className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Criado em: {format(new Date(code.createdAt), "dd/MM/yyyy")}</p>
+                        {code.isUsed && code.usedBy && (
+                             <p className="flex items-center gap-2"><UserIcon className="h-4 w-4" /> Usado por: <span className="font-mono text-xs">{code.usedBy}</span></p>
+                        )}
+                    </div>
+                  </div>
                 ))
-              ) : (
+            ) : (
+                 <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                    <p>Nenhum código gerado ainda.</p>
+                </div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Nenhum código gerado ainda.
-                  </TableCell>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Duração</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Criado Em</TableHead>
+                  <TableHead>Usado Por</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {codes.length > 0 ? (
+                  codes.map((code) => (
+                    <TableRow key={code.id}>
+                      <TableCell className="font-mono">
+                        <div className="flex items-center gap-2">
+                          {code.code}
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(code.code)}>
+                              <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>{code.durationMonths} meses</TableCell>
+                      <TableCell>
+                        <Badge variant={code.isUsed ? 'secondary' : 'default'}>
+                          {code.isUsed ? 'Usado' : 'Disponível'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{format(new Date(code.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</TableCell>
+                      <TableCell className="font-mono text-xs">{code.usedBy || '---'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center h-24">
+                      Nenhum código gerado ainda.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, User, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type AggregatedVehicle = Vehicle & {
@@ -119,7 +119,30 @@ export default function VehiclesPage() {
             </div>
         </CardHeader>
         <CardContent>
-        <div className="overflow-x-auto">
+        {/* Mobile View */}
+        <div className="md:hidden grid grid-cols-1 gap-4">
+             {filteredVehicles.length > 0 ? (
+                filteredVehicles.map(vehicle => (
+                    <div key={vehicle.id} className="border rounded-lg p-4 space-y-3 bg-card/50 cursor-pointer" onClick={() => router.push(`/clients/${vehicle.clientId}`)}>
+                        <div className="font-bold text-lg">{vehicle.make} {vehicle.model}</div>
+                         <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
+                            <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${vehicle.clientId}`} onClick={(e) => e.stopPropagation()} className="hover:underline">{vehicle.clientName}</Link></p>
+                            <p className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {vehicle.year}</p>
+                        </div>
+                        <div className="text-center font-mono text-sm tracking-widest pt-2 mt-2 border-t border-border/50 bg-muted/50 rounded-md p-2">
+                            {vehicle.licensePlate}
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                    <p>{searchTerm ? `Nenhum veículo encontrado para "${searchTerm}"` : "Nenhum veículo cadastrado."}</p>
+                </div>
+            )}
+        </div>
+        
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
           <Table>
               <TableHeader>
                   <TableRow>
@@ -134,7 +157,7 @@ export default function VehiclesPage() {
                   filteredVehicles.map(vehicle => (
                   <TableRow key={vehicle.id} onClick={() => router.push(`/clients/${vehicle.clientId}`)} className="cursor-pointer">
                       <TableCell className="font-medium">{vehicle.make} {vehicle.model}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{vehicle.licensePlate}</TableCell>
+                      <TableCell className="hidden sm:table-cell font-mono">{vehicle.licensePlate}</TableCell>
                       <TableCell className="hidden md:table-cell">{vehicle.year}</TableCell>
                       <TableCell>
                           <Button variant="link" asChild className="p-0 h-auto -ml-2">

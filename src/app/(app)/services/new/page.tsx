@@ -24,6 +24,25 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format, addMonths } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
+import { ImageUpload } from '@/components/services/image-upload';
+
+
+async function uploadImage(imageDataUrl: string): Promise<string> {
+    const blob = await fetch(imageDataUrl).then(res => res.blob());
+    const file = new File([blob], `service-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+    const response = await fetch(`/api/upload?filename=${file.name}`, {
+        method: 'POST',
+        body: file,
+    });
+
+    if (!response.ok) {
+        throw new Error('Falha no upload da imagem.');
+    }
+
+    const newBlob = await response.json();
+    return newBlob.url;
+}
 
 
 const formSchema = z.object({
@@ -34,6 +53,7 @@ const formSchema = z.object({
   cost: z.coerce.number().min(0, { message: 'O custo não pode ser negativo.' }),
   durationMonths: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 mês.' }),
   notes: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 type ServiceFormValues = z.infer<typeof formSchema>;
@@ -59,6 +79,7 @@ export default function NewServicePage() {
       durationMonths: 6,
       cost: 0,
       notes: '',
+      imageUrl: null,
     }
   });
 
@@ -107,17 +128,24 @@ export default function NewServicePage() {
     if (!user) return;
 
     const { clientId, vehicleId, ...serviceData } = data;
-    const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
-
+    
     startTransition(async () => {
       try {
+        let finalImageUrl = '';
+        if (data.imageUrl && data.imageUrl.startsWith('data:image')) {
+            finalImageUrl = await uploadImage(data.imageUrl);
+        }
+
+        const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
+        
         const startDate = new Date(data.date);
         const expirationDate = addMonths(startDate, data.durationMonths);
 
         const newServiceData = {
             ...serviceData,
             date: startDate.toISOString(),
-            expirationDate: expirationDate.toISOString()
+            expirationDate: expirationDate.toISOString(),
+            imageUrl: finalImageUrl,
         };
     
         await addDoc(serviceHistoryCollection, newServiceData);
@@ -305,6 +333,23 @@ export default function NewServicePage() {
                             <FormLabel>Anotações</FormLabel>
                             <FormControl>
                                 <Textarea placeholder="Detalhes sobre o serviço, produtos utilizados, etc." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                     <FormField
+                        control={form.control}
+                        name="imageUrl"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Foto do Serviço</FormLabel>
+                            <FormControl>
+                                <ImageUpload 
+                                    onImageChange={(dataUrl) => form.setValue('imageUrl', dataUrl)}
+                                    initialImageUrl={field.value}
+                                    isSubmitting={isPending}
+                                />
                             </FormControl>
                             <FormMessage />
                             </FormItem>

@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Bell, MessageCircle, User, Lightbulb } from "lucide-react";
+import { Bell, MessageCircle, User, Lightbulb, Car } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -66,13 +66,60 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
         <CardDescription>
             Serviços com vencimento próximo. Para os que vencem em menos de 30 dias, um gatilho de mensagem do WhatsApp estará disponível.
         </CardDescription>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 pt-2 text-xs text-muted-foreground">
           <Lightbulb className="h-4 w-4 text-yellow-400" />
-          <strong>Dica:</strong> Envie uma foto do resultado do último serviço para aumentar a chance de renovação!
+          <p><strong>Dica:</strong> Envie uma foto do resultado do último serviço para aumentar a chance de renovação!</p>
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-96">
+        {/* Mobile View */}
+        <div className="md:hidden grid grid-cols-1 gap-4">
+             {filteredExpirations.length > 0 ? (
+                 filteredExpirations.map((exp) => {
+                    const expiryDate = new Date(exp.expirationDate);
+                    const isExpiringSoon = isWithinInterval(expiryDate, { start: now, end: oneMonthFromNow });
+
+                    return (
+                        <div key={exp.serviceId} className="border rounded-lg p-4 space-y-3 bg-card/50">
+                            <div className="font-bold text-lg">{exp.serviceType}</div>
+                             <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
+                                <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${exp.clientId}`} className="hover:underline">{exp.clientName}</Link></p>
+                                <p className="flex items-center gap-2"><Car className="h-4 w-4" /> {exp.vehicleMake} {exp.vehicleModel}</p>
+                            </div>
+                            <div className="pt-2">
+                                <p className="text-sm text-muted-foreground">Vence:</p>
+                                <p className="font-medium">
+                                    {formatDistanceToNow(expiryDate, { locale: ptBR, addSuffix: true })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    {expiryDate.toLocaleDateString('pt-BR')}
+                                </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-3 border-t border-border/50">
+                                {isExpiringSoon && (
+                                    <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900 w-full">
+                                        <a href={getWhatsAppLink(exp)} target="_blank" rel="noopener noreferrer">
+                                            <MessageCircle className="mr-2 h-4 w-4" />
+                                            WhatsApp
+                                        </a>
+                                    </Button>
+                                )}
+                                <Button asChild variant="outline" size="sm" className="w-full">
+                                    <Link href={`/clients/${exp.clientId}`}>Ver Cliente</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    )
+                 })
+            ) : (
+                <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                    <p>{searchTerm ? `Nenhum serviço encontrado para "${searchTerm}"` : "Nenhum vencimento próximo."}</p>
+                </div>
+            )}
+        </div>
+        
+        {/* Desktop View */}
+        <ScrollArea className="h-96 hidden md:block">
             <Table>
             <TableHeader>
                 <TableRow>
