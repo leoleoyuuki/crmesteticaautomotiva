@@ -126,6 +126,10 @@
                     "type": "string",
                     "format": "date-time",
                     "description": "The calculated expiration date of the service."
+                },
+                "imageUrl": {
+                    "type": "string",
+                    "description": "URL of the photo taken after the service."
                 }
             },
             "required": ["serviceType", "date", "cost", "durationMonths", "expirationDate"]

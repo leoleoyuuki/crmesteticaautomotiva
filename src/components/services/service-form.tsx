@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '../ui/calendar';
+import { ImageUpload } from './image-upload';
 
 const formSchema = z.object({
   serviceType: z.string().min(3, { message: 'O tipo de serviço deve ter pelo menos 3 caracteres.' }),
@@ -28,6 +29,7 @@ const formSchema = z.object({
   cost: z.coerce.number().min(0, { message: 'O custo não pode ser negativo.' }),
   durationMonths: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 mês.' }),
   notes: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,12 +57,17 @@ export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando
         date: service?.date ? new Date(service.date) : new Date(),
         cost: service?.cost || 0,
         durationMonths: service?.durationMonths || 6,
-        notes: service?.notes || ''
+        notes: service?.notes || '',
+        imageUrl: service?.imageUrl || '',
     },
   });
 
   async function onSubmit(values: FormValues) {
       await onSave(toServiceRecordFormData(values));
+  }
+  
+  const handleImageUpload = (url: string) => {
+    form.setValue('imageUrl', url);
   }
 
   return (
@@ -161,6 +168,25 @@ export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Foto do Serviço</FormLabel>
+              <FormControl>
+                 <ImageUpload 
+                    onUploadSuccess={handleImageUpload}
+                    initialImageUrl={field.value}
+                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
         <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" asChild>
                 <Link href={cancelHref}>Cancelar</Link>

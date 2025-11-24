@@ -33,6 +33,7 @@ export interface ServiceRecord {
   cost: number;
   durationMonths: number;
   expirationDate: string;
+  imageUrl?: string;
 }
 
 export type ServiceRecordFormData = Omit<ServiceRecord, 'id' | 'expirationDate'>;

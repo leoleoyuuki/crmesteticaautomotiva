@@ -5,7 +5,7 @@ import { notFound, useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User } from "lucide-react";
+import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User, Camera } from "lucide-react";
 import { ServiceRecommendations } from "@/components/clients/recommendations";
 import Link from "next/link";
 import {
@@ -24,6 +24,15 @@ import { cn } from "@/lib/utils";
 import { isPast, isWithinInterval, addMonths, formatDistanceToNow } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import Image from "next/image";
 
 
 // Helper to safely convert Firestore timestamp or string to a Date object
@@ -185,6 +194,26 @@ export default function ClientDetailPage() {
                                           </TableCell>
                                           <TableCell className="text-right">R$ {service.cost.toFixed(2).replace('.', ',')}</TableCell>
                                           <TableCell className="text-center flex items-center justify-center gap-1">
+                                             {service.imageUrl && (
+                                                <Dialog>
+                                                  <DialogTrigger asChild>
+                                                     <Button variant="ghost" size="icon">
+                                                        <Camera className="h-4 w-4" />
+                                                      </Button>
+                                                  </DialogTrigger>
+                                                  <DialogContent className="max-w-3xl">
+                                                    <DialogHeader>
+                                                      <DialogTitle>Foto do Serviço: {service.serviceType}</DialogTitle>
+                                                      <DialogDescription>
+                                                        Realizado em: {new Date(service.date).toLocaleDateString('pt-BR')}
+                                                      </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="flex items-center justify-center">
+                                                       <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain" />
+                                                    </div>
+                                                  </DialogContent>
+                                                </Dialog>
+                                              )}
                                               <Button variant="ghost" size="icon" asChild>
                                                 <Link href={`/clients/${client.id}/vehicles/${vehicle.id}/services/${service.id}/edit`}>
                                                     <Pencil className="h-4 w-4" />
