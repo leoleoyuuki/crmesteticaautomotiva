@@ -22,35 +22,29 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(initialImageUrl || null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    // Stop camera stream when component unmounts
+    // Cleanup function to stop camera stream when component unmounts or camera is turned off
     return () => {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [stream]);
   
   useEffect(() => {
     onImageChange(capturedImage);
   }, [capturedImage, onImageChange]);
 
   const getCameraPermission = async () => {
-    if (hasCameraPermission === false) {
-        toast({
-            variant: 'destructive',
-            title: 'Câmera não disponível',
-            description: 'Por favor, habilite o acesso à câmera nas configurações do seu navegador.',
-        });
-        return;
-    }
-
+    if (isCameraOn) return;
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasCameraPermission(true);
       setIsCameraOn(true);
+      setStream(stream);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -66,19 +60,18 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
   };
 
   const turnOffCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
     }
     setIsCameraOn(false);
+    setStream(null);
   };
 
   const takePicture = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       
-      // Ensure the video is playing before taking a picture
-      if (video.readyState < 3) {
+      if (video.readyState < video.HAVE_CURRENT_DATA) {
         toast({ variant: 'destructive', title: 'Câmera não pronta', description: 'Aguarde um momento e tente novamente.' });
         return;
       }
@@ -108,7 +101,7 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
 
   const reset = () => {
     setCapturedImage(null);
-    setIsCameraOn(false);
+    turnOffCamera();
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
