@@ -76,6 +76,13 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
   const takePicture = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
+      
+      // Ensure the video is playing before taking a picture
+      if (video.readyState < 3) {
+        toast({ variant: 'destructive', title: 'Câmera não pronta', description: 'Aguarde um momento e tente novamente.' });
+        return;
+      }
+
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
