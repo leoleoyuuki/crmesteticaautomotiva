@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User, Camera, Wallet, Clock, StickyNote } from "lucide-react";
-import { ServiceRecommendations } from "@/components/clients/recommendations";
 import Link from "next/link";
 import {
     DropdownMenu,
@@ -26,9 +25,9 @@ import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import Image from "next/image";
@@ -128,8 +127,6 @@ export default function ClientDetailPage() {
             </div>
           </CardHeader>
         </Card>
-
-        <ServiceRecommendations client={client} />
 
         <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">

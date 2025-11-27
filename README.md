@@ -26,7 +26,7 @@ Organize a frota de cada um dos seus clientes.
 
 ### 4. Controle de Serviços
 Registre cada trabalho realizado para ter um controle financeiro e técnico impecável.
-- **Registro Detalhado:** Ao adicionar um serviço, você pode registrar o tipo, data, custo, anotações e a **duração da garantia** (em meses).
+- **Registro Detalhado:** Ao adicionar um serviço, você pode registrar o tipo, data, custo, anotações, a **duração da garantia** (em meses) e uma **foto** do resultado.
 - **Cálculo Automático de Vencimento:** O sistema calcula a data de expiração do serviço para você, alimentando a tela de renovações.
 - **Edição Fácil:** Com um clique na lista de serviços, você pode editar qualquer informação rapidamente.
 
@@ -35,12 +35,7 @@ Sua ferramenta secreta para fidelizar clientes e garantir a recorrência.
 - **Visão Proativa:** A página mostra todos os serviços que vão vencer nos próximos 2 meses, ordenados pelos mais urgentes.
 - **Contato com um Clique:** Para cada serviço prestes a vencer, há um botão que gera uma **mensagem de WhatsApp** pronta para ser enviada ao cliente, oferecendo a renovação.
 
-### 6. Assistente de Vendas com Inteligência Artificial
-Use a tecnologia a seu favor para vender de forma mais inteligente.
-- **Recomendação Inteligente:** Na página de detalhes de um cliente, clique em "Gerar Recomendação". A IA analisará o histórico e sugerirá o próximo serviço mais lógico a ser oferecido.
-- **Mensagem Personalizada:** Além da sugestão, a IA cria uma mensagem de WhatsApp amigável e persuasiva, pronta para você enviar ao cliente e fechar negócio.
-
-### 7. Configurações da Conta
+### 6. Configurações da Conta
 Gerencie seu acesso com segurança.
 - **Alterar Nome:** Atualize seu nome de exibição no sistema.
 - **Alterar Senha:** Mantenha sua conta segura alterando sua senha.

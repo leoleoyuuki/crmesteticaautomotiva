@@ -1,6 +1,5 @@
 'use server';
 
-import { recommendServicePackages, RecommendServicePackagesInput } from '@/ai/flows/recommend-service-packages';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -15,17 +14,6 @@ import { redirect } from 'next/navigation';
  */
 
 
-// AI Actions
-export async function getServiceRecommendations(input: RecommendServicePackagesInput) {
-    try {
-        const result = await recommendServicePackages(input);
-        return { success: true, data: result };
-    } catch (error) {
-        console.error('Error in getServiceRecommendations:', error);
-        return { success: false, error: "Falha ao obter recomendações. Verifique o console do servidor para mais detalhes." };
-    }
-}
-
 // Revalidation Actions
 export async function revalidateClients() {
     revalidatePath('/clients');
@@ -36,4 +24,3 @@ export async function revalidateClient(clientId: string) {
     revalidatePath(`/clients/${clientId}`);
     revalidatePath('/dashboard');
 }
-
