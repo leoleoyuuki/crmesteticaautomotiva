@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { History, MessageCircle, Lightbulb, Car, User, Camera } from 'lucide-react';
+import { History, MessageCircle, Lightbulb, Car, User, Camera, Download } from 'lucide-react';
 import { addMonths, formatDistanceToNow, isAfter, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import Image from "next/image";
 
@@ -214,8 +215,16 @@ export default function RenewalsPage() {
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <div className="flex items-center justify-center">
-                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
                                             </div>
+                                            <DialogFooter>
+                                                <Button asChild variant="outline">
+                                                    <a href={renewal.imageUrl} download={`servico-${renewal.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="mr-2 h-4 w-4" />
+                                                        Download da Foto
+                                                    </a>
+                                                </Button>
+                                            </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
                                 )}
@@ -287,8 +296,16 @@ export default function RenewalsPage() {
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <div className="flex items-center justify-center">
-                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
                                             </div>
+                                            <DialogFooter>
+                                                <Button asChild variant="outline">
+                                                    <a href={renewal.imageUrl} download={`servico-${renewal.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="mr-2 h-4 w-4" />
+                                                        Download da Foto
+                                                    </a>
+                                                </Button>
+                                            </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
                                 )}

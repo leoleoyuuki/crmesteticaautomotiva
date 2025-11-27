@@ -5,7 +5,7 @@ import { notFound, useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User, Camera, Wallet, Clock, StickyNote } from "lucide-react";
+import { Mail, Phone, Calendar, Car, MoreVertical, Edit, PlusCircle, Pencil, User, Camera, Wallet, Clock, StickyNote, Download } from "lucide-react";
 import Link from "next/link";
 import {
     DropdownMenu,
@@ -29,6 +29,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import Image from "next/image";
 
@@ -205,8 +206,16 @@ export default function ClientDetailPage() {
                                                 </DialogDescription>
                                                 </DialogHeader>
                                                 <div className="flex items-center justify-center">
-                                                    <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                    <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
                                                 </div>
+                                                <DialogFooter>
+                                                    <Button asChild variant="outline">
+                                                        <a href={service.imageUrl} download={`servico-${service.id}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                            <Download className="mr-2 h-4 w-4" />
+                                                            Download da Foto
+                                                        </a>
+                                                    </Button>
+                                                </DialogFooter>
                                             </DialogContent>
                                           </Dialog>
                                       )}
@@ -265,8 +274,16 @@ export default function ClientDetailPage() {
                                                         </DialogDescription>
                                                         </DialogHeader>
                                                         <div className="flex items-center justify-center">
-                                                            <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                            <Image src={service.imageUrl} alt={`Foto do serviço ${service.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
                                                         </div>
+                                                        <DialogFooter>
+                                                            <Button asChild variant="outline">
+                                                                <a href={service.imageUrl} download={`servico-${service.id}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                                    <Download className="mr-2 h-4 w-4" />
+                                                                    Download da Foto
+                                                                </a>
+                                                            </Button>
+                                                        </DialogFooter>
                                                     </DialogContent>
                                                     </Dialog>
                                                 )}

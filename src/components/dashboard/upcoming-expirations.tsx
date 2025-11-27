@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Bell, MessageCircle, User, Lightbulb, Car, Camera } from "lucide-react";
+import { Bell, MessageCircle, User, Lightbulb, Car, Camera, Download } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import Image from "next/image";
 
@@ -118,8 +119,16 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                                                 <DialogTitle>Foto do Serviço: {exp.serviceType}</DialogTitle>
                                             </DialogHeader>
                                             <div className="flex items-center justify-center">
-                                                <Image src={exp.imageUrl} alt={`Foto do serviço ${exp.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                <Image src={exp.imageUrl} alt={`Foto do serviço ${exp.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
                                             </div>
+                                            <DialogFooter>
+                                                <Button asChild variant="outline">
+                                                    <a href={exp.imageUrl} download={`servico-${exp.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="mr-2 h-4 w-4" />
+                                                        Download da Foto
+                                                    </a>
+                                                </Button>
+                                            </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
                                 )}
@@ -199,8 +208,16 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                                                     <DialogTitle>Foto do Serviço: {exp.serviceType}</DialogTitle>
                                                 </DialogHeader>
                                                 <div className="flex items-center justify-center">
-                                                    <Image src={exp.imageUrl} alt={`Foto do serviço ${exp.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                    <Image src={exp.imageUrl} alt={`Foto do serviço ${exp.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
                                                 </div>
+                                                <DialogFooter>
+                                                    <Button asChild variant="outline">
+                                                        <a href={exp.imageUrl} download={`servico-${exp.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                            <Download className="mr-2 h-4 w-4" />
+                                                            Download da Foto
+                                                        </a>
+                                                    </Button>
+                                                </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
                                     )}
