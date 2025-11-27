@@ -24,54 +24,57 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
   const [capturedImage, setCapturedImage] = useState<string | null>(initialImageUrl || null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  // Effect to manage camera stream when isCameraOn changes
   useEffect(() => {
-    // Cleanup function to stop camera stream when component unmounts or camera is turned off
+    async function setupCamera() {
+      if (isCameraOn) {
+        try {
+          const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setHasCameraPermission(true);
+          setStream(newStream);
+          if (videoRef.current) {
+            videoRef.current.srcObject = newStream;
+          }
+        } catch (error) {
+          console.error('Error accessing camera:', error);
+          setHasCameraPermission(false);
+          setIsCameraOn(false); // Turn off camera state if permission fails
+          toast({
+            variant: 'destructive',
+            title: 'Acesso à câmera negado',
+            description: 'Por favor, habilite o acesso à câmera nas configurações do seu navegador.',
+          });
+        }
+      } else {
+        // Cleanup: stop stream when camera is turned off
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          setStream(null);
+        }
+      }
+    }
+
+    setupCamera();
+
+    // Cleanup function for when the component unmounts
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [stream]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCameraOn]);
   
   useEffect(() => {
     onImageChange(capturedImage);
   }, [capturedImage, onImageChange]);
 
-  const getCameraPermission = async () => {
-    if (isCameraOn) return;
-    
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setHasCameraPermission(true);
-      setIsCameraOn(true);
-      setStream(stream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Acesso à câmera negado',
-        description: 'Por favor, habilite o acesso à câmera nas configurações do seu navegador.',
-      });
-    }
-  };
-
-  const turnOffCamera = () => {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    setIsCameraOn(false);
-    setStream(null);
-  };
-
   const takePicture = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       
-      if (video.readyState < video.HAVE_CURRENT_DATA) {
+      // Check if video is playing and has data
+      if (video.paused || video.ended || video.readyState < video.HAVE_CURRENT_DATA) {
         toast({ variant: 'destructive', title: 'Câmera não pronta', description: 'Aguarde um momento e tente novamente.' });
         return;
       }
@@ -83,7 +86,7 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
       context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
       const dataUrl = canvas.toDataURL('image/jpeg');
       setCapturedImage(dataUrl);
-      turnOffCamera();
+      setIsCameraOn(false); // This will trigger the useEffect to stop the stream
     }
   };
 
@@ -101,7 +104,7 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
 
   const reset = () => {
     setCapturedImage(null);
-    turnOffCamera();
+    setIsCameraOn(false);
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -109,7 +112,7 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
   
   const retake = () => {
     setCapturedImage(null);
-    getCameraPermission();
+    setIsCameraOn(true);
   }
 
 
@@ -118,13 +121,13 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
       <div className="p-4 border-2 border-dashed rounded-lg text-center bg-card/80">
         {isCameraOn ? (
           <div className="space-y-4">
-            <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
+            <video ref={videoRef} className="w-full aspect-video rounded-md bg-black" autoPlay muted playsInline />
             <div className="flex justify-center gap-2">
               <Button type="button" onClick={takePicture}>
                 <Camera className="mr-2" />
                 Tirar Foto
               </Button>
-              <Button type="button" variant="outline" onClick={turnOffCamera}>
+              <Button type="button" variant="outline" onClick={() => setIsCameraOn(false)}>
                 Cancelar
               </Button>
             </div>
@@ -159,7 +162,7 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
           <div className="flex flex-col items-center justify-center gap-4 p-6">
              <p className="text-muted-foreground">Anexe uma foto do resultado do serviço.</p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <Button type="button" onClick={getCameraPermission} disabled={isSubmitting} className="w-full">
+              <Button type="button" onClick={() => setIsCameraOn(true)} disabled={isSubmitting} className="w-full">
                 <Camera className="mr-2" />
                 Usar Câmera
               </Button>
