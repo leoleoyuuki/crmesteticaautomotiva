@@ -29,7 +29,7 @@ export function ImageUpload({ onImageChange, initialImageUrl, isSubmitting }: Im
     async function setupCamera() {
       if (isCameraOn) {
         try {
-          const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
           setHasCameraPermission(true);
           setStream(newStream);
           if (videoRef.current) {
