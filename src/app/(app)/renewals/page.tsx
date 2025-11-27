@@ -9,9 +9,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { History, MessageCircle, Lightbulb, Car, User } from 'lucide-react';
+import { History, MessageCircle, Lightbulb, Car, User, Camera } from 'lucide-react';
 import { addMonths, formatDistanceToNow, isAfter, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import Image from "next/image";
+
 
 type RenewalService = {
   clientId: string;
@@ -23,6 +33,8 @@ type RenewalService = {
   serviceId: string;
   serviceType: string;
   expirationDate: string;
+  imageUrl?: string;
+  serviceDate: string;
 };
 
 // Helper to safelyy convert Firestore timestamp or string to a Date object
@@ -72,6 +84,8 @@ export default function RenewalsPage() {
                   serviceId: service.id,
                   serviceType: service.serviceType,
                   expirationDate: expirationDate.toISOString(),
+                  imageUrl: service.imageUrl,
+                  serviceDate: service.date,
                 });
               }
             });
@@ -185,16 +199,31 @@ export default function RenewalsPage() {
                                 </p>
                             </div>
                             <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/50">
+                                {renewal.imageUrl && (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="flex-1">
+                                                <Camera className="mr-2 h-4 w-4" /> Foto
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-3xl w-[95vw]">
+                                            <DialogHeader>
+                                                <DialogTitle>Foto do Serviço: {renewal.serviceType}</DialogTitle>
+                                                <DialogDescription>
+                                                    Realizado em: {new Date(renewal.serviceDate).toLocaleDateString('pt-BR')}
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="flex items-center justify-center">
+                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
                                 <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900 flex-1">
                                   <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
                                       <MessageCircle className="mr-2 h-4 w-4" />
                                       WhatsApp
                                   </a>
-                                </Button>
-                                <Button asChild variant="outline" size="sm" className="flex-1">
-                                    <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>
-                                      Renovar
-                                    </Link>
                                 </Button>
                             </div>
                         </div>
@@ -242,6 +271,27 @@ export default function RenewalsPage() {
                               </div>
                           </TableCell>
                           <TableCell className="text-right space-x-2">
+                              {renewal.imageUrl && (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                                <Camera className="mr-2 h-4 w-4" />
+                                                Ver Foto
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-3xl w-[95vw]">
+                                            <DialogHeader>
+                                                <DialogTitle>Foto do Serviço: {renewal.serviceType}</DialogTitle>
+                                                <DialogDescription>
+                                                    Realizado em: {new Date(renewal.serviceDate).toLocaleDateString('pt-BR')}
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="flex items-center justify-center">
+                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
                               <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900">
                                   <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
                                       <MessageCircle className="mr-2 h-4 w-4" />

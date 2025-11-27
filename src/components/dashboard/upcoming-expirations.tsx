@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Bell, MessageCircle, User, Lightbulb, Car } from "lucide-react";
+import { Bell, MessageCircle, User, Lightbulb, Car, Camera } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -11,6 +11,15 @@ import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from "../ui/scroll-area";
 import { useMemo } from "react";
 import { useSearch } from "@/context/search-provider";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import Image from "next/image";
 
 
 type UpcomingExpiration = {
@@ -24,6 +33,7 @@ type UpcomingExpiration = {
     serviceId: string;
     serviceType: string;
     expirationDate: string;
+    imageUrl?: string;
   };
   
 
@@ -96,6 +106,23 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                                 </p>
                             </div>
                             <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-3 border-t border-border/50">
+                                {exp.imageUrl && (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="w-full">
+                                                <Camera className="mr-2 h-4 w-4" /> Foto
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-3xl w-[95vw]">
+                                            <DialogHeader>
+                                                <DialogTitle>Foto do Serviço: {exp.serviceType}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="flex items-center justify-center">
+                                                <Image src={exp.imageUrl} alt={`Foto do serviço ${exp.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
                                 {isExpiringSoon && (
                                     <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900 w-full">
                                         <a href={getWhatsAppLink(exp)} target="_blank" rel="noopener noreferrer">
@@ -159,6 +186,24 @@ export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right space-x-2">
+                                     {exp.imageUrl && (
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" size="sm">
+                                                    <Camera className="mr-2 h-4 w-4" />
+                                                    Ver Foto
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-3xl w-[95vw]">
+                                                <DialogHeader>
+                                                    <DialogTitle>Foto do Serviço: {exp.serviceType}</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="flex items-center justify-center">
+                                                    <Image src={exp.imageUrl} alt={`Foto do serviço ${exp.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[80vh]" />
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
                                     {isExpiringSoon && (
                                         <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900">
                                             <a href={getWhatsAppLink(exp)} target="_blank" rel="noopener noreferrer">

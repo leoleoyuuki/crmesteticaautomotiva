@@ -24,6 +24,7 @@ export type UpcomingExpiration = {
   serviceId: string;
   serviceType: string;
   expirationDate: string;
+  imageUrl?: string;
 };
 
 export default function DashboardPage() {
@@ -107,6 +108,7 @@ export default function DashboardPage() {
                 serviceId: service.id,
                 serviceType: service.serviceType,
                 expirationDate: service.expirationDate,
+                imageUrl: service.imageUrl,
               });
             }
           }
