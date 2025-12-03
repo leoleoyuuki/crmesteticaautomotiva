@@ -110,7 +110,17 @@ export default function RenewalsPage() {
   
   const getWhatsAppLink = (exp: RenewalService) => {
     const phone = `55${exp.clientPhone.replace(/\D/g, '')}`;
-    const message = `Olá ${exp.clientName}, tudo bem? Notei que o serviço de ${exp.serviceType} para seu ${exp.vehicleMake} ${exp.vehicleModel} está prestes a vencer. Que tal agendar a renovação e manter seu carro sempre impecável?`;
+    const expirationDate = new Date(exp.expirationDate);
+    const hasExpired = isPast(expirationDate);
+    let message;
+
+    if (hasExpired) {
+        const timeAgo = formatDistanceToNow(expirationDate, { locale: ptBR });
+        message = `Olá ${exp.clientName}, tudo bem? Notei que o serviço de ${exp.serviceType} para seu ${exp.vehicleMake} ${exp.vehicleModel} venceu há ${timeAgo}. Que tal agendarmos a renovação para manter seu carro impecável?`;
+    } else {
+        message = `Olá ${exp.clientName}, tudo bem? Notei que o serviço de ${exp.serviceType} para seu ${exp.vehicleMake} ${exp.vehicleModel} está prestes a vencer. Que tal agendar a renovação e manter seu carro sempre impecável?`;
+    }
+    
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   }
 
@@ -196,7 +206,7 @@ export default function RenewalsPage() {
                                 <div className="pt-2">
                                     <p className={`text-sm ${hasExpired ? 'text-destructive' : 'text-muted-foreground'}`}>{hasExpired ? 'Venceu:' : 'Vence:'}</p>
                                     <p className={`font-medium ${hasExpired ? 'text-destructive' : 'text-amber-400'}`}>
-                                        {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: true })}
+                                        {hasExpired ? `há ${formatDistanceToNow(expirationDate, { locale: ptBR })}` : formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: true })}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
                                         {expirationDate.toLocaleDateString('pt-BR')}
@@ -279,7 +289,7 @@ export default function RenewalsPage() {
                               <TableCell>
                                   <div className="flex flex-col">
                                       <span className={`font-medium ${hasExpired ? 'text-destructive' : 'text-amber-400'}`}>
-                                          {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: true })}
+                                          {hasExpired ? 'Venceu há' : 'Vence'} {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: !hasExpired })}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
                                           {expirationDate.toLocaleDateString('pt-BR')}
