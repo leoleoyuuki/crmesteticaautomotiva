@@ -10,7 +10,7 @@ import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { History, MessageCircle, Lightbulb, Car, User, Camera, Download } from 'lucide-react';
-import { addMonths, formatDistanceToNow, isAfter, isBefore } from 'date-fns';
+import { addMonths, formatDistanceToNow, isAfter, isBefore, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -73,8 +73,8 @@ export default function RenewalsPage() {
             vehicle.serviceHistory?.forEach(service => {
               const expirationDate = toDate(service.expirationDate);
               
-              // Include services that have not expired yet but will expire in the next 2 months
-              if (isAfter(expirationDate, now) && isBefore(expirationDate, twoMonthsFromNow)) {
+              // Include services that are already expired or will expire in the next 2 months
+              if (isBefore(expirationDate, twoMonthsFromNow)) {
                 allRenewals.push({
                   clientId: client.id,
                   clientName: client.name,
@@ -131,7 +131,7 @@ export default function RenewalsPage() {
             <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
                 <CardDescription>
-                  Serviços que precisam de atenção para renovação nos próximos 2 meses.
+                  Serviços vencidos ou que precisam de atenção para renovação nos próximos 2 meses.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -145,7 +145,7 @@ export default function RenewalsPage() {
                             <TableHead>Cliente</TableHead>
                             <TableHead className="hidden sm:table-cell">Veículo</TableHead>
                             <TableHead className="hidden md:table-cell">Serviço</TableHead>
-                            <TableHead>Vence em</TableHead>
+                            <TableHead>Status Vencimento</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -171,7 +171,7 @@ export default function RenewalsPage() {
         <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
             <CardDescription>
-                Serviços que precisam de atenção para renovação nos próximos 2 meses.
+                Serviços vencidos ou que precisam de atenção para renovação nos próximos 2 meses.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -183,63 +183,67 @@ export default function RenewalsPage() {
             {/* Mobile View */}
             <div className="md:hidden grid grid-cols-1 gap-4">
                 {filteredRenewals.length > 0 ? (
-                    filteredRenewals.map(renewal => (
-                        <div key={renewal.serviceId} className="border rounded-lg p-4 space-y-3 bg-card/50">
-                            <div className="font-bold text-lg">{renewal.serviceType}</div>
-                            <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
-                                <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${renewal.clientId}`} className="hover:underline">{renewal.clientName}</Link></p>
-                                <p className="flex items-center gap-2"><Car className="h-4 w-4" /> {renewal.vehicleMake} {renewal.vehicleModel}</p>
-                            </div>
-                            <div className="pt-2">
-                                <p className="text-sm text-muted-foreground">Vence:</p>
-                                <p className="font-medium text-amber-400">
-                                    {formatDistanceToNow(new Date(renewal.expirationDate), { locale: ptBR, addSuffix: true })}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {new Date(renewal.expirationDate).toLocaleDateString('pt-BR')}
-                                </p>
-                            </div>
-                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/50">
-                                {renewal.imageUrl && (
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="flex-1">
-                                                <Camera className="mr-2 h-4 w-4" /> Foto
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-3xl w-[95vw]">
-                                            <DialogHeader>
-                                                <DialogTitle>Foto do Serviço: {renewal.serviceType}</DialogTitle>
-                                                <DialogDescription>
-                                                    Realizado em: {new Date(renewal.serviceDate).toLocaleDateString('pt-BR')}
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="flex items-center justify-center">
-                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
-                                            </div>
-                                            <DialogFooter>
-                                                <Button asChild variant="outline">
-                                                    <a href={renewal.imageUrl} download={`servico-${renewal.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
-                                                        <Download className="mr-2 h-4 w-4" />
-                                                        Download da Foto
-                                                    </a>
+                    filteredRenewals.map(renewal => {
+                        const expirationDate = new Date(renewal.expirationDate);
+                        const hasExpired = isPast(expirationDate);
+                        return (
+                            <div key={renewal.serviceId} className="border rounded-lg p-4 space-y-3 bg-card/50">
+                                <div className="font-bold text-lg">{renewal.serviceType}</div>
+                                <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
+                                    <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${renewal.clientId}`} className="hover:underline">{renewal.clientName}</Link></p>
+                                    <p className="flex items-center gap-2"><Car className="h-4 w-4" /> {renewal.vehicleMake} {renewal.vehicleModel}</p>
+                                </div>
+                                <div className="pt-2">
+                                    <p className={`text-sm ${hasExpired ? 'text-destructive' : 'text-muted-foreground'}`}>{hasExpired ? 'Venceu:' : 'Vence:'}</p>
+                                    <p className={`font-medium ${hasExpired ? 'text-destructive' : 'text-amber-400'}`}>
+                                        {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: true })}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {expirationDate.toLocaleDateString('pt-BR')}
+                                    </p>
+                                </div>
+                                <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/50">
+                                    {renewal.imageUrl && (
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" size="sm" className="flex-1">
+                                                    <Camera className="mr-2 h-4 w-4" /> Foto
                                                 </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                )}
-                                <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900 flex-1">
-                                  <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
-                                      <MessageCircle className="mr-2 h-4 w-4" />
-                                      WhatsApp
-                                  </a>
-                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-3xl w-[95vw]">
+                                                <DialogHeader>
+                                                    <DialogTitle>Foto do Serviço: {renewal.serviceType}</DialogTitle>
+                                                    <DialogDescription>
+                                                        Realizado em: {new Date(renewal.serviceDate).toLocaleDateString('pt-BR')}
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="flex items-center justify-center">
+                                                    <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button asChild variant="outline">
+                                                        <a href={renewal.imageUrl} download={`servico-${renewal.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                            <Download className="mr-2 h-4 w-4" />
+                                                            Download da Foto
+                                                        </a>
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
+                                    <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900 flex-1">
+                                      <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
+                                          <MessageCircle className="mr-2 h-4 w-4" />
+                                          WhatsApp
+                                      </a>
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        )
+                    })
                 ) : (
                     <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
-                        <p>{searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço para renovar nos próximos 2 meses."}</p>
+                        <p>{searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço vencido ou próximo do vencimento."}</p>
                     </div>
                 )}
             </div>
@@ -252,82 +256,86 @@ export default function RenewalsPage() {
                           <TableHead>Cliente</TableHead>
                           <TableHead className="hidden sm:table-cell">Veículo</TableHead>
                           <TableHead className="hidden md:table-cell">Serviço</TableHead>
-                          <TableHead>Vence em</TableHead>
+                          <TableHead>Status Vencimento</TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                   </TableHeader>
                   <TableBody>
                   {filteredRenewals.length > 0 ? (
-                      filteredRenewals.map(renewal => (
-                      <TableRow key={renewal.serviceId}>
-                          <TableCell>
-                            <Button variant="link" asChild className="p-0 h-auto font-medium -ml-2">
-                                <Link href={`/clients/${renewal.clientId}`}>
-                                    {renewal.clientName}
-                                </Link>
-                            </Button>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">{renewal.vehicleMake} {renewal.vehicleModel}</TableCell>
-                          <TableCell className="font-medium hidden md:table-cell">{renewal.serviceType}</TableCell>
-                          <TableCell>
-                              <div className="flex flex-col">
-                                  <span className="font-medium text-amber-400">
-                                      {formatDistanceToNow(new Date(renewal.expirationDate), { locale: ptBR, addSuffix: true })}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                      {new Date(renewal.expirationDate).toLocaleDateString('pt-BR')}
-                                  </span>
-                              </div>
-                          </TableCell>
-                          <TableCell className="text-right space-x-2">
-                              {renewal.imageUrl && (
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm">
-                                                <Camera className="mr-2 h-4 w-4" />
-                                                Ver Foto
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-3xl w-[95vw]">
-                                            <DialogHeader>
-                                                <DialogTitle>Foto do Serviço: {renewal.serviceType}</DialogTitle>
-                                                <DialogDescription>
-                                                    Realizado em: {new Date(renewal.serviceDate).toLocaleDateString('pt-BR')}
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="flex items-center justify-center">
-                                                <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
-                                            </div>
-                                            <DialogFooter>
-                                                <Button asChild variant="outline">
-                                                    <a href={renewal.imageUrl} download={`servico-${renewal.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
-                                                        <Download className="mr-2 h-4 w-4" />
-                                                        Download da Foto
-                                                    </a>
+                      filteredRenewals.map(renewal => {
+                        const expirationDate = new Date(renewal.expirationDate);
+                        const hasExpired = isPast(expirationDate);
+                        return (
+                          <TableRow key={renewal.serviceId}>
+                              <TableCell>
+                                <Button variant="link" asChild className="p-0 h-auto font-medium -ml-2">
+                                    <Link href={`/clients/${renewal.clientId}`}>
+                                        {renewal.clientName}
+                                    </Link>
+                                </Button>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">{renewal.vehicleMake} {renewal.vehicleModel}</TableCell>
+                              <TableCell className="font-medium hidden md:table-cell">{renewal.serviceType}</TableCell>
+                              <TableCell>
+                                  <div className="flex flex-col">
+                                      <span className={`font-medium ${hasExpired ? 'text-destructive' : 'text-amber-400'}`}>
+                                          {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: true })}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                          {expirationDate.toLocaleDateString('pt-BR')}
+                                      </span>
+                                  </div>
+                              </TableCell>
+                              <TableCell className="text-right space-x-2">
+                                  {renewal.imageUrl && (
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" size="sm">
+                                                    <Camera className="mr-2 h-4 w-4" />
+                                                    Ver Foto
                                                 </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                )}
-                              <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900">
-                                  <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
-                                      <MessageCircle className="mr-2 h-4 w-4" />
-                                      <span className="hidden lg:inline">WhatsApp</span>
-                                  </a>
-                              </Button>
-                              <Button asChild variant="outline" size="sm">
-                                  <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>
-                                    <span className="hidden lg:inline">Renovar</span>
-                                    <span className="lg:hidden">Ver</span>
-                                  </Link>
-                              </Button>
-                          </TableCell>
-                      </TableRow>
-                      ))
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-3xl w-[95vw]">
+                                                <DialogHeader>
+                                                    <DialogTitle>Foto do Serviço: {renewal.serviceType}</DialogTitle>
+                                                    <DialogDescription>
+                                                        Realizado em: {new Date(renewal.serviceDate).toLocaleDateString('pt-BR')}
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="flex items-center justify-center">
+                                                    <Image src={renewal.imageUrl} alt={`Foto do serviço ${renewal.serviceType}`} width={800} height={600} className="rounded-md object-contain max-h-[70vh]" />
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button asChild variant="outline">
+                                                        <a href={renewal.imageUrl} download={`servico-${renewal.serviceId}.jpg`} target="_blank" rel="noopener noreferrer">
+                                                            <Download className="mr-2 h-4 w-4" />
+                                                            Download da Foto
+                                                        </a>
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
+                                  <Button asChild variant="outline" size="sm" className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200 hover:text-green-900">
+                                      <a href={getWhatsAppLink(renewal)} target="_blank" rel="noopener noreferrer">
+                                          <MessageCircle className="mr-2 h-4 w-4" />
+                                          <span className="hidden lg:inline">WhatsApp</span>
+                                      </a>
+                                  </Button>
+                                  <Button asChild variant="outline" size="sm">
+                                      <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>
+                                        <span className="hidden lg:inline">Renovar</span>
+                                        <span className="lg:hidden">Ver</span>
+                                      </Link>
+                                  </Button>
+                              </TableCell>
+                          </TableRow>
+                        )
+                      })
                   ) : (
                       <TableRow>
                           <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
-                              {searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço para renovar nos próximos 2 meses."}
+                              {searchTerm ? `Nenhuma renovação encontrada para "${searchTerm}"` : "Nenhum serviço vencido ou próximo do vencimento."}
                           </TableCell>
                       </TableRow>
                   )}
