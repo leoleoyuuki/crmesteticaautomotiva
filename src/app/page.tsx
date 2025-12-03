@@ -1,13 +1,30 @@
 'use client'
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Car, Users, BarChart, Sparkles, Zap, TrendingUp, Clock, Shield, Star, ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@/firebase/auth/use-user";
+import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading || user) {
+    return (
+      <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+        <p className="text-white">Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
