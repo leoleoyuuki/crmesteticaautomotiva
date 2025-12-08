@@ -22,6 +22,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import Image from "next/image";
+import { RenewServiceButton } from '@/components/services/renew-service-button';
+import { Badge } from '@/components/ui/badge';
 
 
 type RenewalService = {
@@ -36,6 +38,10 @@ type RenewalService = {
   expirationDate: string;
   imageUrl?: string;
   serviceDate: string;
+  notes?: string;
+  cost: number;
+  durationMonths: number;
+  isRenewed?: boolean;
 };
 
 // Helper to safelyy convert Firestore timestamp or string to a Date object
@@ -87,6 +93,10 @@ export default function RenewalsPage() {
                   expirationDate: expirationDate.toISOString(),
                   imageUrl: service.imageUrl,
                   serviceDate: service.date,
+                  notes: service.notes,
+                  cost: service.cost,
+                  durationMonths: service.durationMonths,
+                  isRenewed: service.isRenewed,
                 });
               }
             });
@@ -198,7 +208,10 @@ export default function RenewalsPage() {
                         const hasExpired = isPast(expirationDate);
                         return (
                             <div key={renewal.serviceId} className="border rounded-lg p-4 space-y-3 bg-card/50">
-                                <div className="font-bold text-lg">{renewal.serviceType}</div>
+                                <div className="flex justify-between items-start">
+                                    <div className="font-bold text-lg">{renewal.serviceType}</div>
+                                    {renewal.isRenewed && <Badge variant="secondary">Renovado</Badge>}
+                                </div>
                                 <div className="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border/50">
                                     <p className="flex items-center gap-2"><User className="h-4 w-4" /> <Link href={`/clients/${renewal.clientId}`} className="hover:underline">{renewal.clientName}</Link></p>
                                     <p className="flex items-center gap-2"><Car className="h-4 w-4" /> {renewal.vehicleMake} {renewal.vehicleModel}</p>
@@ -247,6 +260,9 @@ export default function RenewalsPage() {
                                           WhatsApp
                                       </a>
                                     </Button>
+                                     <RenewServiceButton service={renewal} userId={user.uid} asChild>
+                                        <Button size="sm" className="flex-1" disabled={renewal.isRenewed}>Renovar</Button>
+                                    </RenewServiceButton>
                                 </div>
                             </div>
                         )
@@ -266,7 +282,7 @@ export default function RenewalsPage() {
                           <TableHead>Cliente</TableHead>
                           <TableHead className="hidden sm:table-cell">Veículo</TableHead>
                           <TableHead className="hidden md:table-cell">Serviço</TableHead>
-                          <TableHead>Status Vencimento</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                   </TableHeader>
@@ -276,7 +292,7 @@ export default function RenewalsPage() {
                         const expirationDate = new Date(renewal.expirationDate);
                         const hasExpired = isPast(expirationDate);
                         return (
-                          <TableRow key={renewal.serviceId}>
+                          <TableRow key={renewal.serviceId} className={renewal.isRenewed ? 'bg-muted/50' : ''}>
                               <TableCell>
                                 <Button variant="link" asChild className="p-0 h-auto font-medium -ml-2">
                                     <Link href={`/clients/${renewal.clientId}`}>
@@ -288,12 +304,18 @@ export default function RenewalsPage() {
                               <TableCell className="font-medium hidden md:table-cell">{renewal.serviceType}</TableCell>
                               <TableCell>
                                   <div className="flex flex-col">
-                                      <span className={`font-medium ${hasExpired ? 'text-destructive' : 'text-amber-400'}`}>
-                                          {hasExpired ? 'Venceu há' : 'Vence'} {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: !hasExpired })}
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                          {expirationDate.toLocaleDateString('pt-BR')}
-                                      </span>
+                                        {renewal.isRenewed ? (
+                                            <Badge variant="secondary" className="w-fit">Renovado</Badge>
+                                        ) : (
+                                            <>
+                                                <span className={`font-medium ${hasExpired ? 'text-destructive' : 'text-amber-400'}`}>
+                                                    {hasExpired ? 'Venceu há' : 'Vence'} {formatDistanceToNow(expirationDate, { locale: ptBR, addSuffix: !hasExpired })}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {expirationDate.toLocaleDateString('pt-BR')}
+                                                </span>
+                                            </>
+                                        )}
                                   </div>
                               </TableCell>
                               <TableCell className="text-right space-x-2">
@@ -332,12 +354,11 @@ export default function RenewalsPage() {
                                           <span className="hidden lg:inline">WhatsApp</span>
                                       </a>
                                   </Button>
-                                  <Button asChild variant="outline" size="sm">
-                                      <Link href={`/clients/${renewal.clientId}/vehicles/${renewal.vehicleId}/services/new`}>
-                                        <span className="hidden lg:inline">Renovar</span>
-                                        <span className="lg:hidden">Ver</span>
-                                      </Link>
-                                  </Button>
+                                  <RenewServiceButton service={renewal} userId={user.uid}>
+                                    <Button variant="outline" size="sm" disabled={renewal.isRenewed}>
+                                        {renewal.isRenewed ? "Renovado" : "Renovar"}
+                                    </Button>
+                                  </RenewServiceButton>
                               </TableCell>
                           </TableRow>
                         )

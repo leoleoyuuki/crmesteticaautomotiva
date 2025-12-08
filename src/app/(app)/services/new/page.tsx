@@ -1,10 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/firebase/auth/use-user';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ServiceRecordFormData, Client, Vehicle } from '@/lib/types';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, Suspense } from 'react';
 import { getClients } from '@/lib/data';
 import { addDoc, collection } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
@@ -58,9 +58,10 @@ const formSchema = z.object({
 
 type ServiceFormValues = z.infer<typeof formSchema>;
 
-export default function NewServicePage() {
+function NewServiceForm() {
   const { user } = useUser()!;
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [clients, setClients] = useState<Client[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -74,11 +75,13 @@ export default function NewServicePage() {
   const form = useForm<ServiceFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      serviceType: '',
+      clientId: searchParams.get('clientId') || '',
+      vehicleId: searchParams.get('vehicleId') || '',
+      serviceType: searchParams.get('serviceType') || '',
       date: new Date(),
-      durationMonths: 6,
-      cost: 0,
-      notes: '',
+      durationMonths: searchParams.get('durationMonths') ? Number(searchParams.get('durationMonths')) : 6,
+      cost: searchParams.get('cost') ? Number(searchParams.get('cost')) : 0,
+      notes: searchParams.get('notes') || '',
       imageUrl: null,
     }
   });
@@ -102,11 +105,14 @@ export default function NewServicePage() {
     if (selectedClientId) {
       const selectedClient = clients.find(c => c.id === selectedClientId);
       setVehicles(selectedClient?.vehicles || []);
-      form.setValue('vehicleId', '');
+      // Do not reset vehicleId if it's coming from searchParams
+      if (!searchParams.get('vehicleId')) {
+         form.setValue('vehicleId', '');
+      }
     } else {
       setVehicles([]);
     }
-  }, [selectedClientId, clients, form]);
+  }, [selectedClientId, clients, form, searchParams]);
 
   const onClientAdded = (newClient: Client) => {
     setClients(prev => [...prev, newClient].sort((a,b) => a.name.localeCompare(b.name)));
@@ -146,6 +152,7 @@ export default function NewServicePage() {
             date: startDate.toISOString(),
             expirationDate: expirationDate.toISOString(),
             imageUrl: finalImageUrl,
+            isRenewed: false,
         };
     
         await addDoc(serviceHistoryCollection, newServiceData);
@@ -189,7 +196,7 @@ export default function NewServicePage() {
                             <FormItem>
                             <FormLabel>Cliente</FormLabel>
                             <div className="flex gap-2">
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Selecione um cliente" />
@@ -367,4 +374,12 @@ export default function NewServicePage() {
         </CardContent>
       </Card>
   );
+}
+
+export default function NewServicePage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Carregando...</div>}>
+            <NewServiceForm />
+        </Suspense>
+    )
 }

@@ -34,6 +34,7 @@ export interface ServiceRecord {
   durationMonths: number;
   expirationDate: string;
   imageUrl?: string;
+  isRenewed?: boolean;
 }
 
 export type ServiceRecordFormData = Omit<ServiceRecord, 'id' | 'expirationDate'>;

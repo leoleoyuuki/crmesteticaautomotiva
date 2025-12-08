@@ -130,6 +130,10 @@
                 "imageUrl": {
                     "type": "string",
                     "description": "URL of the photo taken after the service."
+                },
+                "isRenewed": {
+                    "type": "boolean",
+                    "description": "Indicates if the service has been renewed."
                 }
             },
             "required": ["serviceType", "date", "cost", "durationMonths", "expirationDate"]
