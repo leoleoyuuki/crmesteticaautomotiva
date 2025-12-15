@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, Moon, Sun } from "lucide-react";
 import { Input } from "../ui/input";
 import { useUser } from "@/firebase/auth/use-user";
 import { auth } from "@/firebase/firebase";
 import { useSearch } from "@/context/search-provider";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTheme } from "@/context/theme-provider";
 
 const getTitle = (pathname: string) => {
   if (pathname.startsWith('/dashboard')) return 'Painel';
@@ -29,6 +30,8 @@ export function AppHeader() {
   const { user } = useUser();
   const { searchTerm, setSearchTerm } = useSearch();
   const [localSearch, setLocalSearch] = useState(searchTerm);
+  const { theme, setTheme } = useTheme();
+
 
   const title = getTitle(pathname);
   const showSearch = pathname.startsWith('/dashboard') || pathname.startsWith('/clients') || pathname.startsWith('/vehicles') || pathname.startsWith('/services') || pathname.startsWith('/renewals');
@@ -80,6 +83,11 @@ export function AppHeader() {
             </>
           )}
         </div>
+         <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Alternar tema</span>
+        </Button>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
