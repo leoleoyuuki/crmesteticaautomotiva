@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@/firebase/auth/use-user";
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   const { user, loading } = useUser();
@@ -231,61 +232,83 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4. PRICING - Plano único */}
-        <section className="w-full py-20 md:py-32">
+        {/* 4. PRICING - Planos */}
+        <section className="w-full py-20 md:py-32" id="pricing">
           <div className="container px-4 md:px-6 mx-auto max-w-7xl">
             <div className="flex flex-col items-center text-center space-y-4 mb-16">
               <div className="inline-block rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 text-sm text-purple-300">
-                Acesso Completo
+                Preços Flexíveis
               </div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-3xl">
-                Um plano simples, tudo incluído
+                Escolha o plano ideal para você
               </h2>
               <p className="max-w-2xl text-lg text-gray-300">
-                Sem taxas escondidas. Acesso total a todas as ferramentas para transformar sua gestão.
+                Comece com o plano mensal ou economize com nossos planos de longo prazo.
               </p>
             </div>
 
-            <div className="flex justify-center">
-              <div
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/50 shadow-2xl shadow-purple-500/30 w-full max-w-md transition-all duration-300 hover:scale-105"
-              >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {/* Plano Mensal */}
+              <div className="relative p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 hover:border-white/20">
+                <h3 className="text-2xl font-bold text-white text-center mb-2">Mensal</h3>
+                <p className="text-gray-400 text-center mb-6">Ideal para começar.</p>
+                <div className="flex items-baseline justify-center gap-2 mb-8">
+                  <span className="text-5xl font-bold text-white">R$199</span>
+                  <span className="text-gray-400">/mês</span>
+                </div>
+                <Button asChild className="w-full py-6 text-lg bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20">
+                  <Link href="/login">Começar</Link>
+                </Button>
+              </div>
+
+              {/* Plano Anual - Destaque */}
+              <div className="relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500 shadow-2xl shadow-purple-500/30 scale-105">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold">
-                  Plano Completo
+                  Melhor Oferta
                 </div>
-                <div className="text-center mb-6">
-                  <p className="text-gray-400 text-sm mb-4">Acesso total e ilimitado.</p>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-bold text-white">R$ 147,90</span>
-                    <span className="text-gray-400">/mês</span>
-                  </div>
+                <h3 className="text-2xl font-bold text-white text-center mb-2">Anual</h3>
+                <p className="text-gray-400 text-center mb-6">Economize 25%</p>
+                <div className="flex items-baseline justify-center gap-2 mb-8">
+                  <span className="text-5xl font-bold text-white">R$147,90</span>
+                  <span className="text-gray-400">/mês</span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <Button asChild className="w-full py-6 text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/50">
+                  <Link href="/login">Começar com desconto</Link>
+                </Button>
+              </div>
+
+              {/* Plano Trimestral */}
+              <div className="relative p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 hover:border-white/20">
+                <h3 className="text-2xl font-bold text-white text-center mb-2">Trimestral</h3>
+                <p className="text-gray-400 text-center mb-6">Mais flexibilidade.</p>
+                <div className="flex items-baseline justify-center gap-2 mb-8">
+                  <span className="text-5xl font-bold text-white">R$179</span>
+                  <span className="text-gray-400">/mês</span>
+                </div>
+                <Button asChild className="w-full py-6 text-lg bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20">
+                  <Link href="/login">Começar</Link>
+                </Button>
+              </div>
+            </div>
+            
+            <div className="text-center mt-16">
+                 <p className="text-lg font-bold text-white mb-4">Todos os planos incluem:</p>
+                 <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 max-w-4xl mx-auto text-gray-300">
                   {[
                     "Clientes ilimitados",
                     "Veículos ilimitados",
                     "Registro de serviços",
-                    "Dashboard com métricas em tempo real",
+                    "Dashboard com métricas",
                     "Controle de Vencimentos",
-                    "Lembretes de renovação via WhatsApp",
+                    "Lembretes via WhatsApp",
                     "Suporte prioritário"
                   ].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-gray-300">
+                    <li key={i} className="flex items-center gap-3 justify-center md:justify-start">
                       <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <Button
-                  asChild
-                  className="w-full py-6 text-lg transition-all hover:scale-105 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/50"
-                >
-                  <Link href="/login">
-                    Começar a usar
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Link>
-                </Button>
-              </div>
             </div>
           </div>
         </section>
