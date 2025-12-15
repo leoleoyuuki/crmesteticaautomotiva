@@ -63,7 +63,7 @@ export default function LandingPage() {
                 <span>Powered by AI</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white max-w-4xl">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white max-w-4xl">
                 O Futuro da Gestão para sua{" "}
                 <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                   Estética Automotiva
@@ -169,7 +169,7 @@ export default function LandingPage() {
               ].map((feature, index) => (
                 <div
                   key={index}
-                  className="group relative p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                  className="group relative p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 lg:hover:scale-105 hover:shadow-2xl"
                 >
                   <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                     <feature.icon className="w-8 h-8 text-white" />
@@ -197,7 +197,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-y-12 md:gap-8 max-w-5xl mx-auto">
               {[
                 {
                   step: "01",
@@ -249,7 +249,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {/* Plano Mensal */}
-              <div className="relative p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 hover:border-white/20">
+              <div className="relative p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 transition-all duration-300 lg:hover:scale-105">
                 <h3 className="text-2xl font-bold text-white text-center mb-2">Mensal</h3>
                 <p className="text-gray-400 text-center mb-6">Ideal para começar.</p>
                 <div className="flex items-baseline justify-center gap-2 mb-8">
@@ -262,7 +262,7 @@ export default function LandingPage() {
               </div>
 
               {/* Plano Anual - Destaque */}
-              <div className="relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500 shadow-2xl shadow-purple-500/30 scale-105">
+              <div className="relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500 shadow-2xl shadow-purple-500/30 lg:scale-105">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold">
                   Melhor Oferta
                 </div>
@@ -278,7 +278,7 @@ export default function LandingPage() {
               </div>
 
               {/* Plano Trimestral */}
-              <div className="relative p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 hover:border-white/20">
+              <div className="relative p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 transition-all duration-300 lg:hover:scale-105">
                 <h3 className="text-2xl font-bold text-white text-center mb-2">Trimestral</h3>
                 <p className="text-gray-400 text-center mb-6">Mais flexibilidade.</p>
                 <div className="flex items-baseline justify-center gap-2 mb-8">
