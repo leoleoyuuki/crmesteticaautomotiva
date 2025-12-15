@@ -75,8 +75,8 @@ export default function LandingPage() {
               
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Button asChild size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 px-8 py-6 text-lg shadow-lg shadow-purple-500/50 transition-all hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105">
-                  <Link href={user ? "/dashboard" : "/login"}>
-                    {user ? "Ir para o dashboard" : "Comece grátis agora"}
+                  <Link href={"/login"}>
+                    Começar agora
                   </Link>
                 </Button>
                 <Button asChild size="lg" className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 px-8 py-6 text-lg transition-all hover:scale-105">
@@ -87,10 +87,6 @@ export default function LandingPage() {
               </div>
 
               <div className="flex items-center gap-6 text-sm text-gray-300 mt-4">
-                <div className="flex items-center gap-2">
-                  <Check className="w-5 h-5 text-green-400" />
-                  <span>Sem cartão de crédito</span>
-                </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-5 h-5 text-green-400" />
                   <span>Cancele quando quiser</span>
@@ -116,39 +112,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 2. SOCIAL PROOF - Prova social e credibilidade */}
-        <section className="w-full py-16 border-y border-white/10 bg-black/20 backdrop-blur-md">
-          <div className="container px-4 md:px-6 mx-auto max-w-7xl">
-            <div className="flex flex-col items-center text-center space-y-8">
-              <p className="text-sm text-gray-400 uppercase tracking-wide">Confiado por profissionais em todo Brasil</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 w-full max-w-4xl">
-                <div className="flex flex-col items-center">
-                  <div className="text-4xl font-bold text-white mb-2">500+</div>
-                  <div className="text-sm text-gray-400">Negócios ativos</div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="text-4xl font-bold text-white mb-2">50K+</div>
-                  <div className="text-sm text-gray-400">Clientes gerenciados</div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="text-4xl font-bold text-white mb-2">98%</div>
-                  <div className="text-sm text-gray-400">Satisfação</div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="text-4xl font-bold text-white mb-2">4.9/5</div>
-                  <div className="flex gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <div className="text-sm text-gray-400">Avaliação média</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. FEATURES - Benefícios principais */}
+        {/* 2. FEATURES - Benefícios principais */}
         <section className="w-full py-20 md:py-32">
           <div className="container px-4 md:px-6 mx-auto max-w-7xl">
             <div className="flex flex-col items-center text-center space-y-4 mb-16">
@@ -179,14 +143,14 @@ export default function LandingPage() {
                 },
                 {
                   icon: BarChart,
-                  title: "Insights com IA",
-                  description: "Receba recomendações de serviços e previsões de vencimento para fidelizar seus clientes.",
+                  title: "Dashboard Inteligente",
+                  description: "Acompanhe métricas de faturamento, clientes e serviços em tempo real.",
                   gradient: "from-pink-500 to-rose-500"
                 },
                 {
                   icon: Clock,
-                  title: "Agendamento Inteligente",
-                  description: "Sistema de agendamento automático com lembretes e confirmações para seus clientes.",
+                  title: "Controle de Vencimentos",
+                  description: "Nunca perca uma renovação. O sistema avisa sobre serviços prestes a vencer.",
                   gradient: "from-green-500 to-emerald-500"
                 },
                 {
@@ -197,8 +161,8 @@ export default function LandingPage() {
                 },
                 {
                   icon: Zap,
-                  title: "Automações",
-                  description: "Automatize follow-ups, lembretes e mensagens para economizar horas do seu dia.",
+                  title: "Mensagens com 1 Clique",
+                  description: "Envie lembretes de renovação para o WhatsApp com mensagens prontas.",
                   gradient: "from-violet-500 to-purple-500"
                 }
               ].map((feature, index) => (
@@ -217,7 +181,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4. HOW IT WORKS - Como funciona */}
+        {/* 3. HOW IT WORKS - Como funciona */}
         <section className="w-full py-20 md:py-32 bg-black/20 backdrop-blur-md">
           <div className="container px-4 md:px-6 mx-auto max-w-7xl">
             <div className="flex flex-col items-center text-center space-y-4 mb-16">
@@ -237,17 +201,17 @@ export default function LandingPage() {
                 {
                   step: "01",
                   title: "Crie sua conta",
-                  description: "Cadastro rápido em menos de 1 minuto. Sem cartão de crédito necessário."
+                  description: "Cadastro rápido e seguro para iniciar sua jornada."
                 },
                 {
                   step: "02",
-                  title: "Configure seu perfil",
-                  description: "Personalize com as informações do seu negócio e serviços oferecidos."
+                  title: "Cadastre Clientes",
+                  description: "Adicione seus clientes e os veículos de cada um de forma organizada."
                 },
                 {
                   step: "03",
-                  title: "Comece a vender",
-                  description: "Cadastre clientes, agende serviços e deixe a IA fazer o resto por você."
+                  title: "Registre Serviços",
+                  description: "Lance os serviços prestados e deixe o sistema cuidar dos lembretes de renovação."
                 }
               ].map((item, index) => (
                 <div key={index} className="relative">
@@ -267,117 +231,67 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 5. PRICING - Planos e preços */}
+        {/* 4. PRICING - Plano único */}
         <section className="w-full py-20 md:py-32">
           <div className="container px-4 md:px-6 mx-auto max-w-7xl">
             <div className="flex flex-col items-center text-center space-y-4 mb-16">
               <div className="inline-block rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 text-sm text-purple-300">
-                Planos Flexíveis
+                Acesso Completo
               </div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white max-w-3xl">
-                Escolha o plano ideal para você
+                Um plano simples, tudo incluído
               </h2>
               <p className="max-w-2xl text-lg text-gray-300">
-                Comece grátis e faça upgrade quando precisar. Sem surpresas.
+                Sem taxas escondidas. Acesso total a todas as ferramentas para transformar sua gestão.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {[
-                {
-                  name: "Starter",
-                  price: "Grátis",
-                  period: "para sempre",
-                  description: "Perfeito para começar",
-                  features: [
-                    "Até 50 clientes",
-                    "Gestão de veículos",
-                    "Agendamentos básicos",
-                    "Suporte por email"
-                  ],
-                  cta: "Começar grátis",
-                  popular: false
-                },
-                {
-                  name: "Professional",
-                  price: "R$ 97",
-                  period: "/mês",
-                  description: "Para negócios em crescimento",
-                  features: [
-                    "Clientes ilimitados",
-                    "IA e automações",
-                    "Relatórios avançados",
-                    "Suporte prioritário",
-                    "WhatsApp integrado"
-                  ],
-                  cta: "Começar teste grátis",
-                  popular: true
-                },
-                {
-                  name: "Enterprise",
-                  price: "Personalizado",
-                  period: "",
-                  description: "Para grandes operações",
-                  features: [
-                    "Tudo do Professional",
-                    "Múltiplas unidades",
-                    "API dedicada",
-                    "Suporte 24/7",
-                    "Treinamento incluso"
-                  ],
-                  cta: "Falar com vendas",
-                  popular: false
-                }
-              ].map((plan, index) => (
-                <div
-                  key={index}
-                  className={`relative p-8 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 ${
-                    plan.popular
-                      ? "bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/50 shadow-2xl shadow-purple-500/30"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold">
-                      Mais Popular
-                    </div>
-                  )}
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                    <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
-                    <div className="flex items-baseline justify-center gap-2">
-                      <span className="text-5xl font-bold text-white">{plan.price}</span>
-                      <span className="text-gray-400">{plan.period}</span>
-                    </div>
-                  </div>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-3 text-gray-300">
-                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    asChild
-                    className={`w-full py-6 text-lg transition-all hover:scale-105 ${
-                      plan.popular
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/50"
-                        : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                    }`}
-                  >
-                    <Link href="/login">
-                      {plan.cta}
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Link>
-                  </Button>
+            <div className="flex justify-center">
+              <div
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/50 shadow-2xl shadow-purple-500/30 w-full max-w-md transition-all duration-300 hover:scale-105"
+              >
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold">
+                  Plano Completo
                 </div>
-              ))}
+                <div className="text-center mb-6">
+                  <p className="text-gray-400 text-sm mb-4">Acesso total e ilimitado.</p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-bold text-white">R$ 147,90</span>
+                    <span className="text-gray-400">/mês</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Clientes ilimitados",
+                    "Veículos ilimitados",
+                    "Registro de serviços",
+                    "Dashboard com métricas em tempo real",
+                    "Controle de Vencimentos",
+                    "Lembretes de renovação via WhatsApp",
+                    "Suporte prioritário"
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3 text-gray-300">
+                      <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  asChild
+                  className="w-full py-6 text-lg transition-all hover:scale-105 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/50"
+                >
+                  <Link href="/login">
+                    Começar a usar
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 6. CTA FINAL - Conversão final */}
+
+        {/* 5. CTA FINAL - Conversão final */}
         <section className="w-full py-20 md:py-32">
           <div className="container px-4 md:px-6 mx-auto max-w-7xl">
             <div className="relative rounded-3xl overflow-hidden">
@@ -387,12 +301,12 @@ export default function LandingPage() {
                   Pronto para transformar sua gestão?
                 </h2>
                 <p className="max-w-2xl mx-auto text-lg text-white/90">
-                  Junte-se a centenas de profissionais que já estão usando IA para crescer seus negócios
+                  Comece hoje e veja a diferença que uma gestão organizada pode fazer no seu negócio.
                 </p>
                 <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild size="lg" className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all hover:scale-105">
                     <Link href="/login">
-                      Começar gratuitamente
+                      Criar minha conta
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Link>
                   </Button>
@@ -400,11 +314,11 @@ export default function LandingPage() {
                 <div className="flex items-center justify-center gap-6 text-sm text-white/80 mt-6">
                   <div className="flex items-center gap-2">
                     <Shield className="w-5 h-5" />
-                    <span>Dados protegidos</span>
+                    <span>Dados 100% seguros</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-5 h-5" />
-                    <span>Sem cartão necessário</span>
+                    <span>Suporte dedicado</span>
                   </div>
                 </div>
               </div>
