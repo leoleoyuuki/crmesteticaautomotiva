@@ -48,7 +48,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get, update: if isSignedIn() && isOwner(userId);
       allow list, delete: if false;
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.name == request.auth.token.name;
+      allow create: if isSignedIn() && isOwner(userId);
     }
     
     /**
