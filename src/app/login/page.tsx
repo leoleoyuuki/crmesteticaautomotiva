@@ -63,10 +63,13 @@ export default function LoginPage() {
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: name });
+      const user = userCredential.user;
       
-      // Create user profile in Firestore
-      const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+      // Update the user's profile display name in Auth
+      await updateProfile(user, { displayName: name });
+      
+      // Create user profile document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
       await setDoc(userDocRef, {
         name: name,
         email: email,
@@ -74,9 +77,11 @@ export default function LoginPage() {
         activatedUntil: null,
       });
 
-      // Redirect to activation page
+      // Redirect to activation page after successful signup and document creation
       router.push('/activate');
+
     } catch (error: any) {
+        console.error("Signup Error:", error);
         setError(getFirebaseErrorMessage(error.code));
     } finally {
         setLoading(false);
