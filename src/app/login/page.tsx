@@ -89,6 +89,7 @@ export default function LoginPage() {
         return 'O formato do e-mail é inválido.';
       case 'auth/user-not-found':
       case 'auth/wrong-password':
+      case 'auth/invalid-credential':
         return 'E-mail ou senha incorretos.';
       case 'auth/email-already-in-use':
         return 'Este e-mail já está em uso por outra conta.';
