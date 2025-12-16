@@ -15,6 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2 } from 'lucide-react';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -70,20 +72,33 @@ export default function LoginPage() {
       
       // Create user profile document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
+      const userProfileData = {
         name: name,
         email: email,
         isActivated: false,
         activatedUntil: null,
-      });
+      };
 
-      // Redirect to activation page after successful signup and document creation
-      router.push('/activate');
+      setDoc(userDocRef, userProfileData)
+        .then(() => {
+            // Redirect to activation page after successful signup and document creation
+            router.push('/activate');
+        })
+        .catch((serverError: any) => {
+            if (serverError.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: userDocRef.path,
+                    operation: 'create',
+                    requestResourceData: userProfileData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            }
+            setError(getFirebaseErrorMessage(serverError.code));
+            setLoading(false);
+        });
 
     } catch (error: any) {
-        console.error("Signup Error:", error);
         setError(getFirebaseErrorMessage(error.code));
-    } finally {
         setLoading(false);
     }
   };
@@ -100,6 +115,8 @@ export default function LoginPage() {
         return 'Este e-mail já está em uso por outra conta.';
       case 'auth/weak-password':
         return 'A senha é muito fraca. Tente uma mais forte.';
+      case 'permission-denied':
+        return 'Permissão negada. Verifique as regras de segurança do Firestore.';
       default:
         return 'Ocorreu um erro. Por favor, tente novamente.';
     }
