@@ -14,7 +14,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { auth, firestore } from '@/firebase/firebase';
 import { Separator } from '@/components/ui/separator';
 import { collection, query, where, getDocs, doc, writeBatch, updateDoc } from 'firebase/firestore';
-import { addMonths } from 'date-fns';
+import { addDays } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const formSchema = z.object({
@@ -71,7 +71,7 @@ function ActivatePageContent() {
 
         const userDocRef = doc(firestore, 'users', user.uid);
         const now = new Date();
-        const activatedUntil = addMonths(now, codeData.durationMonths);
+        const activatedUntil = addDays(now, codeData.durationDays);
 
         const batch = writeBatch(firestore);
 

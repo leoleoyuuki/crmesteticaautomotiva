@@ -31,7 +31,7 @@ export interface ServiceRecord {
   date: string;
   notes?: string;
   cost: number;
-  durationMonths: number;
+  durationDays: number;
   expirationDate: string;
   imageUrl?: string;
   isRenewed?: boolean;
@@ -61,7 +61,7 @@ export interface UserProfile {
 export interface ActivationCode {
     id: string;
     code: string;
-    durationMonths: number;
+    durationDays: number;
     createdAt: string;
     isUsed: boolean;
     usedBy?: string;

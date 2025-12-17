@@ -27,7 +27,7 @@ const formSchema = z.object({
   serviceType: z.string().min(3, { message: 'O tipo de serviço deve ter pelo menos 3 caracteres.' }),
   date: z.date({ required_error: 'A data do serviço é obrigatória.' }),
   cost: z.coerce.number().min(0, { message: 'O custo não pode ser negativo.' }),
-  durationMonths: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 mês.' }),
+  durationDays: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 dia.' }),
   notes: z.string().optional(),
   imageUrl: z.string().nullable().optional(),
 });
@@ -38,7 +38,7 @@ const toServiceRecordFormData = (data: FormValues, finalImageUrl?: string | null
     serviceType: data.serviceType,
     date: data.date.toISOString(),
     cost: data.cost,
-    durationMonths: data.durationMonths,
+    durationDays: data.durationDays,
     notes: data.notes,
     imageUrl: finalImageUrl || data.imageUrl || '',
 });
@@ -59,7 +59,7 @@ export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando
         serviceType: service?.serviceType || '',
         date: service?.date ? new Date(service.date) : new Date(),
         cost: service?.cost || 0,
-        durationMonths: service?.durationMonths || 6,
+        durationDays: service?.durationDays || 180,
         notes: service?.notes || '',
         imageUrl: service?.imageUrl || null,
     },
@@ -133,12 +133,12 @@ export function ServiceForm({ service, onSave, isPending, savingText = 'Salvando
             />
             <FormField
                 control={form.control}
-                name="durationMonths"
+                name="durationDays"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Duração (meses)</FormLabel>
+                    <FormLabel>Duração (dias)</FormLabel>
                     <FormControl>
-                        <Input type="number" step="1" placeholder="Ex: 6" {...field} />
+                        <Input type="number" step="1" placeholder="Ex: 180" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>

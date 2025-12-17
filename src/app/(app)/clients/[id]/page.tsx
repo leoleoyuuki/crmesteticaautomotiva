@@ -20,7 +20,7 @@ import { DeleteVehicleButton } from "@/components/clients/delete-vehicle-button"
 import { DeleteServiceButton } from "@/components/clients/delete-service-button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { isPast, isWithinInterval, addMonths, formatDistanceToNow, format } from "date-fns";
+import { isPast, isWithinInterval, addDays, formatDistanceToNow, format } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -84,7 +84,7 @@ export default function ClientDetailPage() {
   const getExpirationBadge = (expirationDate: string) => {
     const now = new Date();
     const expiry = new Date(expirationDate);
-    const oneMonthFromNow = addMonths(now, 1);
+    const oneMonthFromNow = addDays(now, 30);
     
     let variant: "destructive" | "default" | "secondary" = "secondary";
     let text = `Vence ${formatDistanceToNow(expiry, { locale: ptBR, addSuffix: true })}`;

@@ -26,7 +26,7 @@ type RenewalService = {
   serviceType: string;
   notes?: string;
   cost: number;
-  durationMonths: number;
+  durationDays: number;
   isRenewed?: boolean;
 };
 
@@ -59,7 +59,7 @@ export function RenewServiceButton({ service, userId, children, asChild }: Renew
             vehicleId: service.vehicleId,
             serviceType: service.serviceType,
             cost: service.cost.toString(),
-            durationMonths: service.durationMonths.toString(),
+            durationDays: service.durationDays.toString(),
             notes: service.notes || '',
         });
 

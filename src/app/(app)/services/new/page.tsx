@@ -22,7 +22,7 @@ import { AddVehicleDialog } from '@/components/vehicles/add-vehicle-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format, addMonths } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { ImageUpload } from '@/components/services/image-upload';
 
@@ -51,7 +51,7 @@ const formSchema = z.object({
   serviceType: z.string().min(3, { message: 'O tipo de serviço deve ter pelo menos 3 caracteres.' }),
   date: z.date({ required_error: 'A data do serviço é obrigatória.' }),
   cost: z.coerce.number().min(0, { message: 'O custo não pode ser negativo.' }),
-  durationMonths: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 mês.' }),
+  durationDays: z.coerce.number().int().min(1, { message: 'A duração deve ser de pelo menos 1 dia.' }),
   notes: z.string().optional(),
   imageUrl: z.string().nullable().optional(),
 });
@@ -79,7 +79,7 @@ function NewServiceForm() {
       vehicleId: searchParams.get('vehicleId') || '',
       serviceType: searchParams.get('serviceType') || '',
       date: new Date(),
-      durationMonths: searchParams.get('durationMonths') ? Number(searchParams.get('durationMonths')) : 6,
+      durationDays: searchParams.get('durationDays') ? Number(searchParams.get('durationDays')) : 180,
       cost: searchParams.get('cost') ? Number(searchParams.get('cost')) : 0,
       notes: searchParams.get('notes') || '',
       imageUrl: null,
@@ -145,7 +145,7 @@ function NewServiceForm() {
         const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
         
         const startDate = new Date(data.date);
-        const expirationDate = addMonths(startDate, data.durationMonths);
+        const expirationDate = addDays(startDate, data.durationDays);
 
         const newServiceData = {
             ...serviceData,
@@ -307,12 +307,12 @@ function NewServiceForm() {
                         />
                         <FormField
                             control={form.control}
-                            name="durationMonths"
+                            name="durationDays"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Duração (meses)</FormLabel>
+                                <FormLabel>Duração (dias)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" step="1" placeholder="Ex: 6" {...field} />
+                                    <Input type="number" step="1" placeholder="Ex: 180" {...field} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>

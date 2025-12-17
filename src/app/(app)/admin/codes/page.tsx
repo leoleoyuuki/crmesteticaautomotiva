@@ -23,7 +23,7 @@ export default function AdminCodesPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [duration, setDuration] = useState<number>(3);
+  const [duration, setDuration] = useState<number>(30);
   const [codes, setCodes] = useState<ActivationCode[]>([]);
   const [isGenerating, startGenerating] = useTransition();
 
@@ -55,7 +55,7 @@ export default function AdminCodesPage() {
       
       const newCodeData = {
           code,
-          durationMonths: duration,
+          durationDays: duration,
           createdAt: serverTimestamp(),
           isUsed: false,
           usedBy: null,
@@ -94,18 +94,22 @@ export default function AdminCodesPage() {
           <CardDescription>Selecione a duração e gere um novo código de ativação para um usuário.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <RadioGroup defaultValue="3" onValueChange={(val) => setDuration(Number(val))} className="flex gap-4">
+          <RadioGroup defaultValue="30" onValueChange={(val) => setDuration(Number(val))} className="flex gap-4">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="3" id="r1" />
-              <Label htmlFor="r1">3 Meses</Label>
+              <RadioGroupItem value="30" id="d30" />
+              <Label htmlFor="d30">30 dias</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="6" id="r2" />
-              <Label htmlFor="r2">6 Meses</Label>
+              <RadioGroupItem value="60" id="d60" />
+              <Label htmlFor="d60">60 dias</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="12" id="r3" />
-              <Label htmlFor="r3">12 Meses</Label>
+              <RadioGroupItem value="90" id="d90" />
+              <Label htmlFor="d90">90 dias</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <RadioGroupItem value="365" id="d365" />
+              <Label htmlFor="d365">365 dias</Label>
             </div>
           </RadioGroup>
           <Button onClick={handleGenerateCode} disabled={isGenerating}>
@@ -130,7 +134,7 @@ export default function AdminCodesPage() {
                         <Badge variant={code.isUsed ? 'secondary' : 'default'}>
                             {code.isUsed ? 'Usado' : 'Disponível'}
                         </Badge>
-                         <span className="text-sm text-muted-foreground">{code.durationMonths} meses</span>
+                         <span className="text-sm text-muted-foreground">{code.durationDays} dias</span>
                      </div>
                     <div className="font-mono text-xl font-bold flex items-center justify-between">
                       {code.code}
@@ -177,7 +181,7 @@ export default function AdminCodesPage() {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell>{code.durationMonths} meses</TableCell>
+                      <TableCell>{code.durationDays} dias</TableCell>
                       <TableCell>
                         <Badge variant={code.isUsed ? 'secondary' : 'default'}>
                           {code.isUsed ? 'Usado' : 'Disponível'}

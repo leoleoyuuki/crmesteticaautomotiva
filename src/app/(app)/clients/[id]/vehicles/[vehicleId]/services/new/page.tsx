@@ -10,7 +10,7 @@ import { getClientById, getVehicleById } from '@/lib/data';
 import { addDoc, collection } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { addMonths } from 'date-fns';
+import { addDays } from 'date-fns';
 
 async function uploadImage(imageDataUrl: string): Promise<string> {
     const blob = await fetch(imageDataUrl).then(res => res.blob());
@@ -78,7 +78,7 @@ export default function NewServicePage() {
         const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
 
         const startDate = new Date(data.date);
-        const expirationDate = addMonths(startDate, data.durationMonths);
+        const expirationDate = addDays(startDate, data.durationDays);
 
         const newServiceData = {
             ...data,

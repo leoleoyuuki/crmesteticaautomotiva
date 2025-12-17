@@ -118,9 +118,9 @@
                     "type": "number",
                     "description": "The cost of the service."
                 },
-                "durationMonths": {
+                "durationDays": {
                     "type": "number",
-                    "description": "The duration of the service in months."
+                    "description": "The duration of the service in days."
                 },
                 "expirationDate": {
                     "type": "string",
@@ -136,7 +136,7 @@
                     "description": "Indicates if the service has been renewed."
                 }
             },
-            "required": ["serviceType", "date", "cost", "durationMonths", "expirationDate"]
+            "required": ["serviceType", "date", "cost", "durationDays", "expirationDate"]
         },
         "activationCode": {
             "title": "Activation Code",
@@ -147,9 +147,9 @@
                     "type": "string",
                     "description": "The unique activation code."
                 },
-                "durationMonths": {
+                "durationDays": {
                     "type": "number",
-                    "description": "The duration of access in months (e.g., 3, 6, 12)."
+                    "description": "The duration of access in days."
                 },
                 "createdAt": {
                     "type": "string",
@@ -170,7 +170,7 @@
                     "description": "The date the code was used."
                 }
             },
-            "required": ["code", "durationMonths", "createdAt", "isUsed"]
+            "required": ["code", "durationDays", "createdAt", "isUsed"]
         }
     },
     "auth": {

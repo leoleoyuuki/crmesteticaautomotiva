@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { addMonths } from 'date-fns';
+import { addDays } from 'date-fns';
 
 async function uploadImage(imageDataUrl: string): Promise<string> {
   const blob = await fetch(imageDataUrl).then(res => res.blob());
@@ -79,7 +79,7 @@ export default function EditServicePage() {
         const serviceDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
         
         const startDate = new Date(data.date);
-        const expirationDate = addMonths(startDate, data.durationMonths);
+        const expirationDate = addDays(startDate, data.durationDays);
 
         const updatedServiceData = {
             ...data,

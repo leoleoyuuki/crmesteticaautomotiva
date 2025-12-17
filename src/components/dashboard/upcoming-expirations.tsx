@@ -6,7 +6,7 @@ import { Bell, MessageCircle, User, Lightbulb, Car, Camera, Download } from "luc
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { formatDistanceToNow, isWithinInterval, addMonths } from "date-fns";
+import { formatDistanceToNow, isWithinInterval, addDays } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from "../ui/scroll-area";
 import { useMemo } from "react";
@@ -44,7 +44,7 @@ interface UpcomingExpirationsProps {
 
 export function UpcomingExpirations({ expirations }: UpcomingExpirationsProps) {
   const now = new Date();
-  const oneMonthFromNow = addMonths(now, 1);
+  const oneMonthFromNow = addDays(now, 30);
   const { searchTerm } = useSearch();
 
   const getWhatsAppLink = (exp: UpcomingExpiration) => {

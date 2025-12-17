@@ -10,7 +10,7 @@ import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { History, MessageCircle, Lightbulb, Car, User, Camera, Download } from 'lucide-react';
-import { addMonths, formatDistanceToNow, isAfter, isBefore, isPast } from 'date-fns';
+import { addDays, formatDistanceToNow, isAfter, isBefore, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -40,7 +40,7 @@ type RenewalService = {
   serviceDate: string;
   notes?: string;
   cost: number;
-  durationMonths: number;
+  durationDays: number;
   isRenewed?: boolean;
 };
 
@@ -72,7 +72,7 @@ export default function RenewalsPage() {
         const allRenewals: RenewalService[] = [];
         
         const now = new Date();
-        const twoMonthsFromNow = addMonths(now, 2);
+        const twoMonthsFromNow = addDays(now, 60);
 
         clientsData.forEach(client => {
           client.vehicles?.forEach(vehicle => {
@@ -95,7 +95,7 @@ export default function RenewalsPage() {
                   serviceDate: service.date,
                   notes: service.notes,
                   cost: service.cost,
-                  durationMonths: service.durationMonths,
+                  durationDays: service.durationDays,
                   isRenewed: service.isRenewed,
                 });
               }
@@ -191,7 +191,7 @@ export default function RenewalsPage() {
         <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
             <CardDescription>
-                Serviços vencidos ou que precisam de atenção para renovação nos próximos 2 meses.
+                Serviços vencidos ou que precisam de atenção para renovação nos próximos 60 dias.
             </CardDescription>
         </CardHeader>
         <CardContent>
