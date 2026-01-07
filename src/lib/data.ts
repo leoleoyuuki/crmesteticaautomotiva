@@ -1,6 +1,6 @@
 'use client';
 
-import { collection, doc, getDoc, getDocs, Timestamp, query, orderBy } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, Timestamp, query, orderBy, limit, startAfter, where, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import type { Client, Vehicle, ServiceRecord, UserProfile, ActivationCode } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -128,6 +128,28 @@ export async function getClients(userId: string): Promise<Client[]> {
         }
         return [];
     }
+}
+
+export async function getClientsPaginated(userId: string, pageSize: number, startAfterDoc?: QueryDocumentSnapshot<DocumentData>) {
+    const clientsCollection = collection(firestore, 'users', userId, 'clients');
+    let q;
+    if (startAfterDoc) {
+        q = query(clientsCollection, orderBy('createdAt', 'desc'), startAfter(startAfterDoc), limit(pageSize));
+    } else {
+        q = query(clientsCollection, orderBy('createdAt', 'desc'), limit(pageSize));
+    }
+
+    const documentSnapshots = await getDocs(q);
+    const clients = documentSnapshots.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: toISOString(doc.data().createdAt),
+        vehicles: [] // Vehicles not loaded in paginated view for performance
+    })) as Client[];
+    
+    const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
+    
+    return { clients, lastVisible };
 }
 
 export async function getClientById(userId: string, id: string): Promise<Client | undefined> {

@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { getClients } from '@/lib/data';
+import { getClientsPaginated } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal, User, Edit, Trash2, Eye, Mail, Phone, Car } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, User, Edit, Trash2, Eye, Mail, Phone, Car, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,107 +16,72 @@ import { useUser } from '@/firebase/auth/use-user';
 import { DeleteClientButton } from '@/components/clients/delete-client-button';
 import { useSearch } from '@/context/search-provider';
 import { useRouter } from 'next/navigation';
+import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
-// Helper to safely convert Firestore timestamp or string to a Date object
-const toDate = (timestamp: any): Date => {
-  if (timestamp && typeof timestamp.seconds === 'number') {
-    return new Date(timestamp.seconds * 1000);
-  }
-  if (typeof timestamp === 'string') {
-    const date = new Date(timestamp);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-  }
-  return new Date(); // Fallback to now if conversion fails
-};
-
+const PAGE_SIZE = 10;
 
 export default function ClientsPage() {
-  const { user } = useUser()!;
+  const { user, loading: userLoading } = useUser()!;
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const { searchTerm } = useSearch();
 
+  const fetchClients = async (loadMore = false) => {
+    if (!user || !hasMore && loadMore) return;
+    setLoading(true);
+    try {
+      const { clients: newClients, lastVisible: newLastVisible } = await getClientsPaginated(
+        user.uid,
+        PAGE_SIZE,
+        loadMore ? lastVisible! : undefined
+      );
+
+      setClients(prev => loadMore ? [...prev, ...newClients] : newClients);
+      setLastVisible(newLastVisible);
+      setHasMore(newClients.length === PAGE_SIZE);
+
+    } catch (error) {
+      console.error("Failed to fetch clients:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    async function fetchClients() {
-      if (!user) return;
-      try {
-        const clientsData = await getClients(user.uid);
-        const formattedClients = clientsData.map(client => ({
-          ...client,
-          createdAt: toDate(client.createdAt).toISOString(),
-        }));
-        setClients(formattedClients);
-      } catch (error) {
-        console.error("Failed to fetch clients:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     if (user) {
-      fetchClients();
+      fetchClients(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const filteredClients = useMemo(() => {
     if (!searchTerm) return clients;
     return clients.filter(client => 
-      client.name.toLowerCase().includes(searchTerm.toLowerCase())
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.phone.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [clients, searchTerm]);
-
-  if (loading || !user) {
-    return (
-        <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-              <div className="flex-1">
-                  <CardTitle className="font-headline">Clientes</CardTitle>
-                  <CardDescription>Gerencie seus clientes e veja seus históricos de serviço.</CardDescription>
-              </div>
-              <Button asChild className="shrink-0">
-                  <Link href="/clients/new">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      <span className="hidden sm:inline">Adicionar Cliente</span>
-                      <span className="inline sm:hidden">Novo</span>
-                  </Link>
-              </Button>
+  
+  const renderSkeletons = () => (
+    Array.from({ length: 5 }).map((_, i) => (
+      <TableRow key={i}>
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="h-4 w-[150px]" />
           </div>
-        </CardHeader>
-        <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead className="hidden lg:table-cell">Telefone</TableHead>
-              <TableHead>Veículos</TableHead>
-              <TableHead><span className="sr-only">Ações</span></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-9 w-9 rounded-full" />
-                  <Skeleton className="h-4 w-[150px]" />
-                </div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[200px]" /></TableCell>
-              <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-[100px]" /></TableCell>
-              <TableCell><Skeleton className="h-6 w-8 rounded-full" /></TableCell>
-              <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-            </TableRow>
-          ))}
-          </TableBody>
-        </Table>
-        </CardContent>
-        </Card>
-    );
-  }
+        </TableCell>
+        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[200px]" /></TableCell>
+        <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-[100px]" /></TableCell>
+        <TableCell><Skeleton className="h-6 w-8 rounded-full" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+      </TableRow>
+    ))
+  );
 
   return (
       <Card>
@@ -167,7 +132,7 @@ export default function ClientsPage() {
                                         <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DeleteClientButton userId={user.uid} clientId={client.id} />
+                                        <DeleteClientButton userId={user!.uid} clientId={client.id} />
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -179,9 +144,15 @@ export default function ClientsPage() {
                     </div>
                 ))
             ) : (
-                 <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
-                    <p>{searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}</p>
-                </div>
+                !loading && (
+                    <div className="text-center text-muted-foreground py-10 px-4 border rounded-md">
+                        <p>{searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}</p>
+                    </div>
+                )
+            )}
+             {loading && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
+             {!loading && hasMore && !searchTerm && (
+                <Button onClick={() => fetchClients(true)} variant="outline" className="w-full mt-4">Carregar Mais</Button>
             )}
           </div>
 
@@ -198,53 +169,61 @@ export default function ClientsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.length > 0 ? (
-                  filteredClients.map(client => (
-                  <TableRow key={client.id} onClick={() => router.push(`/clients/${client.id}`)} className="cursor-pointer">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                            <AvatarFallback className="bg-muted text-muted-foreground">
-                              <User className="h-5 w-5" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="font-medium">{client.name}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{client.email}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{client.phone}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DeleteClientButton userId={user.uid} clientId={client.id} />
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
-                            {searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}
-                        </TableCell>
+                {(userLoading || (loading && clients.length === 0)) ? renderSkeletons() : (
+                  filteredClients.length > 0 ? (
+                    filteredClients.map(client => (
+                    <TableRow key={client.id} onClick={() => router.push(`/clients/${client.id}`)} className="cursor-pointer">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                              <AvatarFallback className="bg-muted text-muted-foreground">
+                                <User className="h-5 w-5" />
+                              </AvatarFallback>
+                          </Avatar>
+                          <div className="font-medium">{client.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{client.email}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{client.phone}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}`)}><Eye className="mr-2 h-4 w-4" />Ver Detalhes</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => router.push(`/clients/${client.id}/edit`)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DeleteClientButton userId={user!.uid} clientId={client.id} />
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
+                  ))
+                  ) : (
+                      <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8 h-48">
+                              {searchTerm ? `Nenhum cliente encontrado para "${searchTerm}"` : "Nenhum cliente encontrado."}
+                          </TableCell>
+                      </TableRow>
+                  )
                 )}
               </TableBody>
             </Table>
+             {!loading && hasMore && !searchTerm && (
+                <div className="pt-4 text-center">
+                    <Button onClick={() => fetchClients(true)} variant="outline">Carregar Mais</Button>
+                </div>
+            )}
+            {loading && clients.length > 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
           </div>
         </CardContent>
       </Card>
