@@ -18,7 +18,7 @@ import { useSearch } from '@/context/search-provider';
 import { useRouter } from 'next/navigation';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 export default function ClientsPage() {
   const { user, loading: userLoading } = useUser()!;
@@ -229,3 +229,5 @@ export default function ClientsPage() {
       </Card>
   );
 }
+
+    

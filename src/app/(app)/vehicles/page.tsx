@@ -18,7 +18,7 @@ type AggregatedVehicle = Vehicle & {
   clientId: string;
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 export default function VehiclesPage() {
   const { user, loading: userLoading } = useUser()!;
@@ -184,3 +184,5 @@ export default function VehiclesPage() {
     </Card>
   );
 }
+
+    

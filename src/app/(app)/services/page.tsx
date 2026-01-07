@@ -21,7 +21,7 @@ type AggregatedService = ServiceRecord & {
   vehicleModel: string;
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 // Helper to safely convert Firestore timestamp or string to a Date object
 const toDate = (timestamp: any): Date => {
@@ -213,3 +213,5 @@ export default function ServicesPage() {
     </Card>
   );
 }
+
+    
