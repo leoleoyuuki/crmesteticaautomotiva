@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { ClientForm } from './client-form';
 import { Client, ClientFormData } from '@/lib/types';
 import { useUser } from '@/firebase/auth/use-user';
@@ -75,6 +75,7 @@ export function AddClientDialog({ children, isOpen, onOpenChange, onClientAdded 
              onSave={handleAddClient} 
              isPending={isPending}
              savingText="Salvando..."
+             onCancel={() => onOpenChange(false)}
            />
         </div>
       </DialogContent>

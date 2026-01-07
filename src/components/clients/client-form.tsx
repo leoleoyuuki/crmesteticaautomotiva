@@ -24,7 +24,7 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: 'Por favor, insira um e-mail válido.',
-  }),
+  }).optional().or(z.literal('')),
   phone: z.string().min(10, {
     message: 'O telefone deve ter pelo menos 10 caracteres.',
   }),
@@ -83,7 +83,7 @@ export function ClientForm({ client, onSave, isPending, savingText = 'Salvando..
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email (Opcional)</FormLabel>
               <FormControl>
                 <Input placeholder="Ex: joao.silva@example.com" {...field} />
               </FormControl>

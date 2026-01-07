@@ -62,7 +62,7 @@
                     "description": "A hint for AI to find a similar avatar image."
                 }
             },
-            "required": ["name", "email", "createdAt"]
+            "required": ["name", "createdAt"]
         },
         "vehicle": {
             "title": "Vehicle",

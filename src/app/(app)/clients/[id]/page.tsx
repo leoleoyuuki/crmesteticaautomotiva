@@ -114,7 +114,7 @@ export default function ClientDetailPage() {
                 <div className="flex-1 text-center sm:text-left">
                   <CardTitle className="font-headline text-2xl md:text-3xl">{client.name}</CardTitle>
                   <CardDescription className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-x-4 gap-y-1 text-base mt-1 justify-center sm:justify-start">
-                    <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>
+                    {client.email && <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {client.email}</span>}
                   </CardDescription>
                 </div>
             </div>

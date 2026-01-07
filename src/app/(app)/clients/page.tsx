@@ -61,7 +61,7 @@ export default function ClientsPage() {
     if (!searchTerm) return clients;
     return clients.filter(client => 
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [clients, searchTerm]);
@@ -138,7 +138,7 @@ export default function ClientsPage() {
                             </div>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1 pt-3 border-t border-border/50">
-                           <p className="flex items-center gap-2"><Mail className="h-4 w-4" /> {client.email}</p>
+                           {client.email && <p className="flex items-center gap-2"><Mail className="h-4 w-4" /> {client.email}</p>}
                            <p className="flex items-center gap-2"><Phone className="h-4 w-4" /> {client.phone}</p>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ export default function ClientsPage() {
                           <div className="font-medium">{client.name}</div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{client.email}</TableCell>
+                      <TableCell className="hidden md:table-cell">{client.email || '---'}</TableCell>
                       <TableCell className="hidden lg:table-cell">{client.phone}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{client.vehicles ? client.vehicles.length : 0}</Badge>
