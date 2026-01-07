@@ -30,13 +30,13 @@ export default function ClientsPage() {
   const { searchTerm } = useSearch();
 
   const fetchClients = async (loadMore = false) => {
-    if (!user || !hasMore && loadMore) return;
+    if (!user || (!hasMore && loadMore)) return;
     setLoading(true);
     try {
       const { clients: newClients, lastVisible: newLastVisible } = await getClientsPaginated(
         user.uid,
         PAGE_SIZE,
-        loadMore ? lastVisible! : undefined
+        loadMore ? lastVisible : undefined
       );
 
       setClients(prev => loadMore ? [...prev, ...newClients] : newClients);
@@ -62,7 +62,7 @@ export default function ClientsPage() {
     return clients.filter(client => 
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.phone.toLowerCase().includes(searchTerm.toLowerCase())
+      (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [clients, searchTerm]);
   
@@ -150,9 +150,11 @@ export default function ClientsPage() {
                     </div>
                 )
             )}
-             {loading && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
+             {loading && clients.length === 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
              {!loading && hasMore && !searchTerm && (
-                <Button onClick={() => fetchClients(true)} variant="outline" className="w-full mt-4">Carregar Mais</Button>
+                <Button onClick={() => fetchClients(true)} variant="outline" className="w-full mt-4" disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
+                </Button>
             )}
           </div>
 
@@ -220,7 +222,9 @@ export default function ClientsPage() {
             </Table>
              {!loading && hasMore && !searchTerm && (
                 <div className="pt-4 text-center">
-                    <Button onClick={() => fetchClients(true)} variant="outline">Carregar Mais</Button>
+                    <Button onClick={() => fetchClients(true)} variant="outline" disabled={loading}>
+                      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
+                    </Button>
                 </div>
             )}
             {loading && clients.length > 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}

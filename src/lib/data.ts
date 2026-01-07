@@ -100,7 +100,7 @@ export async function getClients(userId: string): Promise<Client[]> {
                         serviceType: serviceData.serviceType,
                         notes: serviceData.notes,
                         cost: serviceData.cost,
-                        durationMonths: serviceData.durationMonths,
+                        durationDays: serviceData.durationDays,
                         date: toISOString(serviceData.date),
                         expirationDate: toISOString(serviceData.expirationDate),
                         imageUrl: serviceData.imageUrl,
