@@ -1,6 +1,6 @@
 'use client';
 
-import { collection, doc, getDoc, getDocs, Timestamp, query, orderBy, limit, startAfter, where, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, Timestamp, query, orderBy, limit, startAfter, where, DocumentData, QueryDocumentSnapshot, collectionGroup } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import type { Client, Vehicle, ServiceRecord, UserProfile, ActivationCode } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -23,6 +23,41 @@ const toISOString = (date: any): string => {
     // Return a valid ISO string for invalid or missing dates to avoid downstream errors
     return new Date(0).toISOString();
 };
+
+export async function getUpcomingRenewals(userId: string, startDate: Date, endDate: Date): Promise<ServiceRecord[]> {
+    if (!firestore) {
+        console.error("Firestore not initialized");
+        return [];
+    }
+    const servicesRef = collectionGroup(firestore, 'serviceHistory');
+    const q = query(servicesRef, 
+        where('userId', '==', userId), // Assuming you'll add userId to each service
+        where('expirationDate', '>=', startDate.toISOString()),
+        where('expirationDate', '<=', endDate.toISOString()),
+        orderBy('expirationDate')
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        const renewals: ServiceRecord[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            renewals.push({
+                id: doc.id,
+                ...data,
+                date: toISOString(data.date),
+                expirationDate: toISOString(data.expirationDate),
+            } as ServiceRecord);
+        });
+        return renewals;
+    } catch (error) {
+        console.error("Error fetching renewals: ", error);
+        // Firestore will log a message in the console with a link to create the index.
+        // You can also handle this error more gracefully in the UI.
+        return [];
+    }
+}
+
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
     if (!firestore) return null;

@@ -10,7 +10,7 @@ import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { History, MessageCircle, Lightbulb, Car, User, Camera, Download } from 'lucide-react';
-import { addDays, formatDistanceToNow, isAfter, isBefore, isPast, subDays } from 'date-fns';
+import { addDays, formatDistanceToNow, isAfter, isBefore, isPast, subDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -78,7 +78,7 @@ export default function RenewalsPage() {
         clientsData.forEach(client => {
           client.vehicles?.forEach(vehicle => {
             vehicle.serviceHistory?.forEach(service => {
-              const expirationDate = toDate(service.expirationDate);
+              const expirationDate = parseISO(service.expirationDate);
               
               // Include services that expired in the last 3 weeks or will expire in the next week
               if (isAfter(expirationDate, threeWeeksAgo) && isBefore(expirationDate, oneWeekFromNow)) {
