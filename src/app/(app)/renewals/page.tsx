@@ -10,7 +10,7 @@ import { useSearch } from '@/context/search-provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { History, MessageCircle, Lightbulb, Car, User, Camera, Download } from 'lucide-react';
-import { addDays, formatDistanceToNow, isAfter, isBefore, isPast } from 'date-fns';
+import { addDays, formatDistanceToNow, isAfter, isBefore, isPast, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -72,15 +72,16 @@ export default function RenewalsPage() {
         const allRenewals: RenewalService[] = [];
         
         const now = new Date();
-        const twoMonthsFromNow = addDays(now, 60);
+        const threeWeeksAgo = subDays(now, 21);
+        const oneWeekFromNow = addDays(now, 7);
 
         clientsData.forEach(client => {
           client.vehicles?.forEach(vehicle => {
             vehicle.serviceHistory?.forEach(service => {
               const expirationDate = toDate(service.expirationDate);
               
-              // Include services that are already expired or will expire in the next 2 months
-              if (isBefore(expirationDate, twoMonthsFromNow)) {
+              // Include services that expired in the last 3 weeks or will expire in the next week
+              if (isAfter(expirationDate, threeWeeksAgo) && isBefore(expirationDate, oneWeekFromNow)) {
                 allRenewals.push({
                   clientId: client.id,
                   clientName: client.name,
@@ -151,7 +152,7 @@ export default function RenewalsPage() {
             <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
                 <CardDescription>
-                  Serviços vencidos ou que precisam de atenção para renovação nos próximos 2 meses.
+                  Serviços vencidos ou que precisam de atenção para renovação.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -191,7 +192,7 @@ export default function RenewalsPage() {
         <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><History /> Renovações</CardTitle>
             <CardDescription>
-                Serviços vencidos ou que precisam de atenção para renovação nos próximos 60 dias.
+                Serviços vencidos nos últimos 21 dias ou que vencerão nos próximos 7 dias.
             </CardDescription>
         </CardHeader>
         <CardContent>
