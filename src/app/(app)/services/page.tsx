@@ -88,6 +88,7 @@ export default function ServicesPage() {
   
   const filteredServices = useMemo(() => {
     if (!searchTerm) return displayServices;
+    // When searching, filter the entire list, not just the paginated one.
     return allServices.filter(service =>
       service.serviceType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,10 +103,11 @@ export default function ServicesPage() {
     const newServices = allServices.slice(0, nextPage * PAGE_SIZE);
     setDisplayServices(newServices);
     setPage(nextPage);
-    setLoading(false);
+    // Simulate loading
+    setTimeout(() => setLoading(false), 300);
   };
 
-  const hasMore = displayServices.length < allServices.length;
+  const hasMore = !searchTerm && displayServices.length < allServices.length;
 
   const renderSkeletons = () => (
     Array.from({ length: 5 }).map((_, i) => (
@@ -157,8 +159,10 @@ export default function ServicesPage() {
                     )
                 )}
                  {loading && displayServices.length === 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
-                 {!loading && hasMore && !searchTerm && (
-                    <Button onClick={loadMore} variant="outline" className="w-full mt-4">Carregar Mais</Button>
+                 {hasMore && (
+                    <Button onClick={loadMore} variant="outline" className="w-full mt-4" disabled={loading}>
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
+                    </Button>
                 )}
             </div>
 
@@ -202,9 +206,11 @@ export default function ServicesPage() {
                     )}
                     </TableBody>
                 </Table>
-                {!loading && hasMore && !searchTerm && (
+                {hasMore && (
                     <div className="pt-4 text-center">
-                        <Button onClick={loadMore} variant="outline">Carregar Mais</Button>
+                        <Button onClick={loadMore} variant="outline" disabled={loading}>
+                          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
+                        </Button>
                     </div>
                 )}
                 {loading && displayServices.length > 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
@@ -213,5 +219,3 @@ export default function ServicesPage() {
     </Card>
   );
 }
-
-    

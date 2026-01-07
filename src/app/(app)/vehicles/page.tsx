@@ -63,6 +63,7 @@ export default function VehiclesPage() {
 
   const filteredVehicles = useMemo(() => {
     if (!searchTerm) return displayVehicles;
+    // When searching, filter the entire list, not just the paginated one.
     return allVehicles.filter(vehicle =>
       vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,10 +78,11 @@ export default function VehiclesPage() {
     const newVehicles = allVehicles.slice(0, nextPage * PAGE_SIZE);
     setDisplayVehicles(newVehicles);
     setPage(nextPage);
-    setLoading(false);
+    // Simulate loading
+    setTimeout(() => setLoading(false), 300);
   };
   
-  const hasMore = displayVehicles.length < allVehicles.length;
+  const hasMore = !searchTerm && displayVehicles.length < allVehicles.length;
 
   const renderSkeletons = () => (
     Array.from({ length: 5 }).map((_, i) => (
@@ -130,8 +132,10 @@ export default function VehiclesPage() {
                 )
             )}
              {loading && displayVehicles.length === 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
-             {!loading && hasMore && !searchTerm && (
-                <Button onClick={loadMore} variant="outline" className="w-full mt-4">Carregar Mais</Button>
+             {hasMore && (
+                <Button onClick={loadMore} variant="outline" className="w-full mt-4" disabled={loading}>
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
+                </Button>
             )}
         </div>
         
@@ -155,7 +159,7 @@ export default function VehiclesPage() {
                           <TableCell className="hidden sm:table-cell font-mono">{vehicle.licensePlate}</TableCell>
                           <TableCell className="hidden md:table-cell">{vehicle.year}</TableCell>
                           <TableCell>
-                              <Button variant="link" asChild className="p-0 h-auto -ml-2">
+                              <Button variant="link" asChild className="p-0 h-auto -ml-2" onClick={(e) => { e.stopPropagation(); router.push(`/clients/${vehicle.clientId}`)}}>
                                   <Link href={`/clients/${vehicle.clientId}`}>
                                       {vehicle.clientName}
                                   </Link>
@@ -173,9 +177,11 @@ export default function VehiclesPage() {
                 )}
               </TableBody>
           </Table>
-           {!loading && hasMore && !searchTerm && (
+           {hasMore && (
                 <div className="pt-4 text-center">
-                    <Button onClick={loadMore} variant="outline">Carregar Mais</Button>
+                    <Button onClick={loadMore} variant="outline" disabled={loading}>
+                      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
+                    </Button>
                 </div>
             )}
             {loading && displayVehicles.length > 0 && <div className="text-center p-4"> <Loader2 className="mx-auto animate-spin" /></div>}
@@ -184,5 +190,3 @@ export default function VehiclesPage() {
     </Card>
   );
 }
-
-    
