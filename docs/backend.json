@@ -26,6 +26,10 @@
                     "type": "string",
                     "format": "date-time",
                     "description": "The date when the user's access expires."
+                },
+                "migrationCompleted": {
+                    "type": "boolean",
+                    "description": "Whether the one-time data migration/summarization has been completed for this user."
                 }
             },
             "required": ["name", "email", "isActivated"]
@@ -171,6 +175,39 @@
                 }
             },
             "required": ["code", "durationDays", "createdAt", "isUsed"]
+        },
+        "userSummary": {
+            "title": "User Summary",
+            "description": "Aggregated data for a user for quick dashboard display.",
+            "type": "object",
+            "properties": {
+                "totalRevenue": { "type": "number" },
+                "totalClients": { "type": "number" },
+                "totalServices": { "type": "number" },
+                "clientGrowth": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "month": { "type": "string", "description": "Format YYYY-MM" },
+                            "clients": { "type": "number" }
+                        }
+                    }
+                },
+                "lastUpdated": { "type": "string", "format": "date-time" }
+            },
+            "required": ["totalRevenue", "totalClients", "totalServices", "lastUpdated"]
+        },
+        "monthlyRevenue": {
+            "title": "Monthly Revenue",
+            "description": "Represents the total revenue for a specific month.",
+            "type": "object",
+            "properties": {
+                "id": { "type": "string", "description": "ID in YYYY-MM format." },
+                "month": { "type": "string", "description": "Month in YYYY-MM format." },
+                "revenue": { "type": "number" }
+            },
+            "required": ["id", "month", "revenue"]
         }
     },
     "auth": {
@@ -182,6 +219,14 @@
                 "$ref": "#/entities/userProfile"
             },
             "description": "Stores user profile information."
+        },
+        "/users/{userId}/summary/allTime": {
+            "schema": { "$ref": "#/entities/userSummary" },
+            "description": "A single document containing aggregated data for the user."
+        },
+        "/users/{userId}/monthlyRevenues/{year_month}": {
+            "schema": { "$ref": "#/entities/monthlyRevenue" },
+            "description": "Stores total revenue for a specific month."
         },
         "/activationCodes/{codeId}": {
             "schema": {

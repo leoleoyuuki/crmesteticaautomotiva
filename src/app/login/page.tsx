@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { auth, firestore } from '@/firebase/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -67,35 +67,33 @@ export default function LoginPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Update the user's profile display name in Auth
       await updateProfile(user, { displayName: name });
       
-      // Create user profile document in Firestore
+      const batch = writeBatch(firestore);
+
       const userDocRef = doc(firestore, 'users', user.uid);
       const userProfileData = {
         name: name,
         email: email,
         isActivated: false,
         activatedUntil: null,
+        migrationCompleted: false, // Set migration as not completed for new users
       };
+      batch.set(userDocRef, userProfileData);
 
-      setDoc(userDocRef, userProfileData)
-        .then(() => {
-            // Redirect to activation page after successful signup and document creation
-            router.push('/activate');
-        })
-        .catch((serverError: any) => {
-            if (serverError.code === 'permission-denied') {
-                const permissionError = new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'create',
-                    requestResourceData: userProfileData,
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            }
-            setError(getFirebaseErrorMessage(serverError.code));
-            setLoading(false);
-        });
+      const summaryDocRef = doc(firestore, 'users', user.uid, 'summary', 'allTime');
+      const initialSummary = {
+        totalRevenue: 0,
+        totalClients: 0,
+        totalServices: 0,
+        clientGrowth: [],
+        lastUpdated: new Date().toISOString(),
+      };
+      batch.set(summaryDocRef, initialSummary);
+
+      await batch.commit();
+      
+      router.push('/activate');
 
     } catch (error: any) {
         setError(getFirebaseErrorMessage(error.code));

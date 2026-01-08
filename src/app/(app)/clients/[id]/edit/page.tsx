@@ -44,10 +44,9 @@ export default function EditClientPage() {
   const handleUpdateClient = async (data: ClientFormData) => {
     if (!user || !client) return;
     
-    const clientDocRef = doc(firestore, 'users', user.uid, 'clients', clientId);
-
     startTransition(async () => {
       try {
+        const clientDocRef = doc(firestore, 'users', user.uid, 'clients', clientId);
         await updateDoc(clientDocRef, data as any);
         toast({
           title: 'Cliente atualizado!',

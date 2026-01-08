@@ -75,6 +75,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
             email: data.email,
             isActivated: data.isActivated || false,
             activatedUntil: data.activatedUntil ? toISOString(data.activatedUntil) : undefined,
+            migrationCompleted: data.migrationCompleted || false,
         };
     } catch(serverError: any) {
         if (serverError.code === 'permission-denied') {

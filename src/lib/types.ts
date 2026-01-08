@@ -56,6 +56,7 @@ export interface UserProfile {
     email: string;
     isActivated: boolean;
     activatedUntil?: string;
+    migrationCompleted?: boolean;
 }
 
 export interface ActivationCode {
@@ -66,4 +67,18 @@ export interface ActivationCode {
     isUsed: boolean;
     usedBy?: string;
     usedAt?: string;
+}
+
+export interface UserSummary {
+  totalRevenue: number;
+  totalClients: number;
+  totalServices: number;
+  clientGrowth: { month: string; clients: number }[];
+  lastUpdated: string;
+}
+
+export interface MonthlyRevenue {
+  id: string; // YYYY-MM
+  month: string; // YYYY-MM
+  revenue: number;
 }

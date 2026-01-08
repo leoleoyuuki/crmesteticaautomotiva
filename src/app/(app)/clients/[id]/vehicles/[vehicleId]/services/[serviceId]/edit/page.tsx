@@ -8,7 +8,7 @@ import { ServiceRecord, ServiceRecordFormData } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ServiceForm } from '@/components/services/service-form';
 import { Skeleton } from '@/components/ui/skeleton';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, runTransaction, increment } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { addDays } from 'date-fns';
@@ -66,29 +66,46 @@ export default function EditServicePage() {
 
     startTransition(async () => {
       try {
-        let finalImageUrl = service.imageUrl || '';
-        
-        // Only upload if the image data is a new base64 string
-        if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
-          finalImageUrl = await uploadImage(imageDataUrl);
-        } else if (imageDataUrl === null) {
-          // Image was removed
-          finalImageUrl = '';
-        }
+        await runTransaction(firestore, async (transaction) => {
+          let finalImageUrl = service.imageUrl || '';
+          
+          // Only upload if the image data is a new base64 string
+          if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
+            finalImageUrl = await uploadImage(imageDataUrl);
+          } else if (imageDataUrl === null) {
+            // Image was removed
+            finalImageUrl = '';
+          }
 
-        const serviceDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
-        
-        const startDate = new Date(data.date);
-        const expirationDate = addDays(startDate, data.durationDays);
+          const serviceDocRef = doc(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
+          
+          const startDate = new Date(data.date);
+          const expirationDate = addDays(startDate, data.durationDays);
 
-        const updatedServiceData = {
-            ...data,
-            date: startDate.toISOString(),
-            expirationDate: expirationDate.toISOString(),
-            imageUrl: finalImageUrl,
-        };
+          const updatedServiceData = {
+              ...data,
+              date: startDate.toISOString(),
+              expirationDate: expirationDate.toISOString(),
+              imageUrl: finalImageUrl,
+          };
+          
+          transaction.update(serviceDocRef, updatedServiceData as any);
+
+          // Update summary totals
+          const costDifference = data.cost - service.cost;
+          if (costDifference !== 0) {
+            const summaryRef = doc(firestore, 'users', user.uid, 'summary', 'allTime');
+            transaction.update(summaryRef, {
+              totalRevenue: increment(costDifference)
+            });
+          }
+
+          // This logic can get very complex. For example, if the date of service changes,
+          // we would need to decrement from the old month and increment the new month.
+          // A Cloud Function triggered on update is a more robust solution for this.
+          // For now, we only update the total revenue.
+        });
         
-        await updateDoc(serviceDocRef, updatedServiceData as any);
         toast({
           title: "Serviço atualizado!",
           description: "O registro de serviço foi salvo."

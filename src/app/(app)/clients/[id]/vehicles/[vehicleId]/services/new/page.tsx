@@ -7,7 +7,7 @@ import { ServiceForm } from '@/components/services/service-form';
 import { ServiceRecordFormData } from '@/lib/types';
 import { useEffect, useState, useTransition } from 'react';
 import { getClientById, getVehicleById } from '@/lib/data';
-import { addDoc, collection } from 'firebase/firestore';
+import { collection, doc, runTransaction, increment } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { addDays } from 'date-fns';
@@ -70,24 +70,52 @@ export default function NewServicePage() {
     
     startTransition(async () => {
       try {
-        let finalImageUrl = '';
-        if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
-          finalImageUrl = await uploadImage(imageDataUrl);
-        }
+        await runTransaction(firestore, async (transaction) => {
+            let finalImageUrl = '';
+            if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
+              finalImageUrl = await uploadImage(imageDataUrl);
+            }
+            
+            const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
+            const newServiceRef = doc(serviceHistoryCollection);
+
+            const startDate = new Date(data.date);
+            const expirationDate = addDays(startDate, data.durationDays);
+
+            const newServiceData = {
+                ...data,
+                date: startDate.toISOString(),
+                expirationDate: expirationDate.toISOString(),
+                imageUrl: finalImageUrl,
+            };
         
-        const serviceHistoryCollection = collection(firestore, 'users', user.uid, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory');
+            transaction.set(newServiceRef, newServiceData);
 
-        const startDate = new Date(data.date);
-        const expirationDate = addDays(startDate, data.durationDays);
+            // Update summary
+            const summaryRef = doc(firestore, 'users', user.uid, 'summary', 'allTime');
+            transaction.update(summaryRef, {
+                totalRevenue: increment(data.cost),
+                totalServices: increment(1)
+            });
 
-        const newServiceData = {
-            ...data,
-            date: startDate.toISOString(),
-            expirationDate: expirationDate.toISOString(),
-            imageUrl: finalImageUrl,
-        };
-    
-        await addDoc(serviceHistoryCollection, newServiceData);
+            // Update monthly revenue
+            const serviceMonthKey = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}`;
+            const monthlyRevenueRef = doc(firestore, 'users', user.uid, 'monthlyRevenues', serviceMonthKey);
+            const monthlyRevenueDoc = await transaction.get(monthlyRevenueRef);
+
+            if (monthlyRevenueDoc.exists()) {
+                transaction.update(monthlyRevenueRef, {
+                    revenue: increment(data.cost)
+                });
+            } else {
+                transaction.set(monthlyRevenueRef, {
+                    id: serviceMonthKey,
+                    month: serviceMonthKey,
+                    revenue: data.cost,
+                });
+            }
+        });
+
         toast({
           title: "Serviço adicionado!",
           description: "Um novo serviço foi registrado com sucesso."

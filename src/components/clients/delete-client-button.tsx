@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { deleteDoc, doc, getDocs, collection, writeBatch } from 'firebase/firestore';
+import { doc, getDocs, collection, runTransaction, increment } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,21 +38,35 @@ export function DeleteClientButton({ userId, clientId }: DeleteClientButtonProps
         return;
       }
       
-      const clientDocRef = doc(firestore, 'users', userId, 'clients', clientId);
-      const batch = writeBatch(firestore);
-
       try {
-        const vehiclesCollection = collection(clientDocRef, 'vehicles');
-        const vehiclesSnapshot = await getDocs(vehiclesCollection);
-        for (const vehicleDoc of vehiclesSnapshot.docs) {
-            const serviceHistoryCollection = collection(vehicleDoc.ref, 'serviceHistory');
-            const serviceHistorySnapshot = await getDocs(serviceHistoryCollection);
-            serviceHistorySnapshot.forEach(serviceDoc => batch.delete(serviceDoc.ref));
-            batch.delete(vehicleDoc.ref);
-        }
-        batch.delete(clientDocRef);
+        await runTransaction(firestore, async (transaction) => {
+          const clientDocRef = doc(firestore, 'users', userId, 'clients', clientId);
+          let servicesToDeleteCount = 0;
+          let revenueToDecrement = 0;
 
-        await batch.commit();
+          const vehiclesCollection = collection(clientDocRef, 'vehicles');
+          const vehiclesSnapshot = await getDocs(vehiclesCollection);
+          
+          for (const vehicleDoc of vehiclesSnapshot.docs) {
+              const serviceHistoryCollection = collection(vehicleDoc.ref, 'serviceHistory');
+              const serviceHistorySnapshot = await getDocs(serviceHistoryCollection);
+              serviceHistorySnapshot.forEach(serviceDoc => {
+                  const serviceData = serviceDoc.data();
+                  revenueToDecrement += serviceData.cost || 0;
+                  servicesToDeleteCount++;
+                  transaction.delete(serviceDoc.ref);
+              });
+              transaction.delete(vehicleDoc.ref);
+          }
+          transaction.delete(clientDocRef);
+
+          const summaryRef = doc(firestore, 'users', userId, 'summary', 'allTime');
+          transaction.update(summaryRef, {
+            totalClients: increment(-1),
+            totalServices: increment(-servicesToDeleteCount),
+            totalRevenue: increment(-revenueToDecrement)
+          });
+        });
 
         toast({
           title: "Cliente excluído!",

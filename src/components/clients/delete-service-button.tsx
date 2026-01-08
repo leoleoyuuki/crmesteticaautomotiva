@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { deleteDoc, doc } from 'firebase/firestore';
+import { doc, runTransaction, increment, getDoc } from 'firebase/firestore';
 import { firestore } from '@/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,8 +34,33 @@ export function DeleteServiceButton({ userId, clientId, vehicleId, serviceId }: 
   const handleDelete = () => {
     startTransition(async () => {
       const serviceDocRef = doc(firestore, 'users', userId, 'clients', clientId, 'vehicles', vehicleId, 'serviceHistory', serviceId);
+      
       try {
-        await deleteDoc(serviceDocRef);
+        await runTransaction(firestore, async (transaction) => {
+          const serviceDoc = await transaction.get(serviceDocRef);
+          if (!serviceDoc.exists()) {
+            throw new Error("Serviço não encontrado!");
+          }
+
+          const costToDecrement = serviceDoc.data().cost || 0;
+          
+          transaction.delete(serviceDocRef);
+          
+          const summaryRef = doc(firestore, 'users', userId, 'summary', 'allTime');
+          transaction.update(summaryRef, {
+            totalServices: increment(-1),
+            totalRevenue: increment(-costToDecrement)
+          });
+          
+           // Update monthly revenue
+           const serviceDate = new Date(serviceDoc.data().date);
+           const serviceMonthKey = `${serviceDate.getFullYear()}-${(serviceDate.getMonth() + 1).toString().padStart(2, '0')}`;
+           const monthlyRevenueRef = doc(firestore, 'users', userId, 'monthlyRevenues', serviceMonthKey);
+           transaction.update(monthlyRevenueRef, {
+               revenue: increment(-costToDecrement)
+           });
+        });
+
         toast({
           title: "Serviço excluído",
           description: "O registro de serviço foi removido."
