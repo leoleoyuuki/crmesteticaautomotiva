@@ -70,6 +70,23 @@ service cloud.firestore {
                     && request.resource.data.usedBy == request.auth.uid;
       allow delete: if false;
     }
+    
+    /**
+     * @description Controls access to a user's aggregated summary data.
+     * @allow (all) - Only the owner of the data can read or write.
+     */
+    match /users/{userId}/summary/{docId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's monthly revenue data.
+     * @allow (all) - Only the owner of the data can read or write.
+     */
+    match /users/{userId}/monthlyRevenues/{monthId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
 
     /**
      * @description Controls access to client information for a specific user.
